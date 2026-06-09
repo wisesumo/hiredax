@@ -1,0 +1,501 @@
+/* ── Customer Portal (Sight Link PWA) ──────────── */
+
+.portal-page {
+  min-height: 100vh;
+  background: var(--color-bone);
+  font-family: var(--font-body);
+}
+
+.portal-container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+/* Offset content below the dev bar */
+.portal-page.portal-dev-mode .portal-container {
+  padding-top: 52px;
+}
+
+.portal-header {
+  padding: 24px 0 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── Dev switcher ───────────────────────────────── */
+
+.portal-dev-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(27, 34, 56, 0.94);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.portal-dev-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-green);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.portal-dev-select {
+  font-family: var(--font-body);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-bone);
+  outline: none;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Shared state layout ────────────────────────── */
+
+.portal-heading {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-navy);
+  margin: 0 0 8px;
+  line-height: var(--leading-tight);
+}
+
+.portal-subtext {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-stone);
+  margin: 0;
+  line-height: var(--leading-normal);
+}
+
+.portal-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-navy-12);
+  margin: 24px 0;
+}
+
+/* ── Buttons ────────────────────────────────────── */
+
+.portal-btn {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  padding: 14px 20px;
+  min-height: var(--touch-min);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--ease-fast);
+  box-sizing: border-box;
+  border: none;
+}
+
+.portal-btn-primary {
+  background: var(--color-green);
+  color: var(--color-navy);
+}
+
+.portal-btn-primary:hover:not(:disabled) {
+  background: #6CCA5B;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.portal-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.portal-btn-outline {
+  background: transparent;
+  color: var(--color-navy);
+  border: 1.5px solid var(--color-navy-12);
+}
+
+.portal-btn-outline:hover {
+  border-color: var(--color-navy-40);
+  background: var(--color-bone-deep);
+}
+
+.portal-btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* ── State 1 — link_sent (upload) ───────────────── */
+
+.portal-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 0 8px;
+  gap: 12px;
+}
+
+.portal-upload-icon {
+  font-size: 64px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.portal-photo-count {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-stone);
+  margin: 4px 0 0;
+  font-weight: 500;
+}
+
+/* ── State 2 — photos_uploading ─────────────────── */
+
+.portal-thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin: 16px 0;
+}
+
+.portal-thumb {
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  width: 100%;
+  display: block;
+}
+
+.portal-progress-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--color-navy-12);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: 8px 0 16px;
+}
+
+.portal-progress-bar {
+  height: 100%;
+  background: var(--color-green);
+  border-radius: var(--radius-full);
+  width: 60%;
+  animation: portal-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes portal-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+/* ── State 3 — analysis_running ─────────────────── */
+
+.portal-spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 0 40px;
+  gap: 20px;
+  text-align: center;
+}
+
+/* ── State 4 — quote_approved ───────────────────── */
+
+.portal-card {
+  background: var(--color-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.portal-card-header {
+  padding: 20px 24px 0;
+}
+
+.portal-card-body {
+  padding: 16px 24px 24px;
+}
+
+/* Mandatory disclaimer */
+.portal-disclaimer {
+  background: #FEF08A;
+  border: 2px solid #EAB308;
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.portal-disclaimer-title {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: #7A5A00;
+  margin: 0 0 4px;
+}
+
+.portal-disclaimer-body {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: #7A5A00;
+  margin: 0;
+  line-height: var(--leading-normal);
+}
+
+/* Items list */
+.portal-items {
+  border-top: 1px solid var(--color-navy-06);
+}
+
+.portal-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-navy-06);
+  gap: 12px;
+}
+
+.portal-item-name {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-navy);
+  flex: 1;
+  text-transform: capitalize;
+}
+
+.portal-item-meta {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-stone);
+  white-space: nowrap;
+}
+
+.portal-line-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-navy-06);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-stone);
+}
+
+.portal-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 16px 0 0;
+  border-top: 2px solid var(--color-navy-12);
+  margin-top: 4px;
+}
+
+.portal-total-label {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.portal-total-amount {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.portal-call-link {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-stone);
+  text-decoration: none;
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--ease-fast);
+}
+
+.portal-call-link:hover { color: var(--color-navy); }
+
+/* ── State 5 — booking_confirmed ────────────────── */
+
+.portal-confirmed-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 0 8px;
+  gap: 12px;
+}
+
+.portal-circle-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-green-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.portal-booking-slot {
+  background: var(--color-white);
+  border: 1.5px solid var(--color-navy-12);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.portal-booking-slot-icon { font-size: 24px; }
+
+.portal-booking-slot-text {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-navy);
+  margin: 0;
+}
+
+/* Canvas signature */
+.portal-canvas-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.portal-canvas-wrap {
+  border: 1.5px solid var(--color-navy-12);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-white);
+  touch-action: none;
+}
+
+.portal-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 200px;
+  cursor: crosshair;
+}
+
+.portal-canvas-clear {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-stone);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  transition: color var(--ease-fast);
+}
+
+.portal-canvas-clear:hover { color: var(--color-navy); }
+
+/* ── State 6 — job_complete ─────────────────────── */
+
+.portal-complete-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 0 8px;
+  gap: 8px;
+}
+
+.portal-section-heading {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-navy);
+  margin: 16px 0 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.portal-stars-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.portal-textarea {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-navy);
+  padding: 12px 14px;
+  border: 1.5px solid var(--color-navy-12);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  width: 100%;
+  resize: vertical;
+  min-height: 96px;
+  outline: none;
+  box-sizing: border-box;
+  line-height: var(--leading-normal);
+  transition: border-color var(--ease-fast);
+}
+
+.portal-textarea::placeholder { color: var(--color-navy-40); }
+.portal-textarea:focus { border-color: var(--color-green); }
+
+.portal-char-count {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-stone);
+  text-align: right;
+  margin-top: 4px;
+  margin-bottom: 16px;
+}
+
+.portal-thanks {
+  text-align: center;
+  padding: 16px;
+  background: var(--color-green-light);
+  border-radius: var(--radius-md);
+  color: #2D7A22;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 400px) {
+  .portal-container { padding: 0 16px 80px; }
+  .portal-card-header,
+  .portal-card-body { padding-left: 18px; padding-right: 18px; }
+}

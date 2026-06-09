@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 function XIcon() {
   return (
     <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden>
@@ -33,8 +35,8 @@ export function Footer() {
         </div>
 
         <div className="mkt-footer-links">
-          <a href="/terms" className="mkt-footer-link">Terms</a>
-          <a href="/privacy" className="mkt-footer-link">Privacy</a>
+          <Link href="/terms" className="mkt-footer-link">Terms</Link>
+          <Link href="/privacy" className="mkt-footer-link">Privacy</Link>
         </div>
 
         <div className="mkt-social">
