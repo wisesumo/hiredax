@@ -193,15 +193,32 @@ After scaffolding, inside the hiredax/ directory:
 2. Create styles/design-system.css with EXACTLY the CSS variables
    from SSD v4 section 1.4 — all tokens under :root {}.
 
-3. Update app/layout.tsx:
+3. Create styles/globals.css with ONLY this content:
+   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+   html { -webkit-font-smoothing: antialiased; }
+   body { background: var(--color-bone); color: var(--color-navy); }
+   a { color: inherit; }
+   button { font-family: inherit; }
+
+4. Update app/layout.tsx:
    - Import Fraunces (weight: ['300','400','600','700']) and Manrope
      (weight: ['300','400','500','600','700']) from next/font/google
    - Apply as CSS variables --font-display (Fraunces) and --font-body
      (Manrope) on the <html> element
-   - Import styles/design-system.css
+   - Import styles/design-system.css FIRST, then styles/globals.css
+   - Do NOT import any Tailwind CSS files
 
-4. Update tailwind.config.ts to include app/, components/, styles/
-   in the content array.
+5. Also create these empty stylesheet files (they will be filled by
+   later tasks):
+   styles/marketing.css
+   styles/auth.css
+   styles/onboarding.css
+   styles/dashboard.css
+   styles/portal.css
+   styles/components.css
+
+DO NOT create or reference tailwind.config.ts — Tailwind is not used
+in this project. We use plain CSS with design system variables only.
 
 Run npm run dev and confirm it starts. Report any issues.
 ```
@@ -304,7 +321,12 @@ Build each as a separate file:
 9. components/ui/Spinner.tsx
    Rotating CSS animation. Size prop: sm|md|lg.
 
-Create app/dev/page.tsx rendering every component with example props for QA.
+Create styles/components.css for all shared UI components. Import it
+in app/layout.tsx after globals.css. All component classes use the
+prefix .ui-* (e.g. .ui-btn, .ui-card, .ui-badge, .ui-input).
+Do NOT use Tailwind classes. Use only CSS variables from design-system.css.
+
+Create /dev page rendering every component with example props for QA.
 Export all from components/ui/index.ts.
 ```
 
@@ -416,7 +438,11 @@ Export: MOCK_OPERATOR, MOCK_SESSIONS (array of all 3), all types.
 TASK 5 — Onboarding Wizard (7 Steps)
 
 Build app/onboarding/page.tsx. All state local (useState). No backend.
-Background var(--bone). Use Card component per step.
+
+STYLING: Create styles/onboarding.css and import it at the top of this
+file. Use .ob-* class names (e.g. .ob-page, .ob-card, .ob-step, .ob-progress).
+Do NOT use Tailwind classes. Use CSS variables from design-system.css only.
+Page background: var(--bg-base). Cards use var(--bg-raised).
 
 TOP PROGRESS BAR: "Step N of 7" with fill bar in var(--color-green).
 
@@ -484,7 +510,11 @@ Step 2: navy card with white text. Step 4: large tap targets. Step 7: animation.
 TASK 6 — Customer Portal (Sight Link PWA)
 
 Build app/portal/[token]/page.tsx. Zero-install PWA. No login required.
-Background var(--bone). Mobile-first (375px base).
+
+STYLING: Create styles/portal.css and import it at the top of this file.
+Use .portal-* class names (e.g. .portal-page, .portal-card, .portal-btn).
+Do NOT use Tailwind classes. Use CSS variables from design-system.css only.
+Page background: var(--bg-base). Mobile-first (375px base).
 
 Include a DEV-ONLY state switcher dropdown at top:
 "[DEV] Preview State:" — remove before deployment in Task 12.
@@ -562,7 +592,12 @@ Use dev switcher to walk all states. Check signature canvas draws. Check disclai
 ```
 TASK 7 — Expert Seal Live Feed
 
-Build app/dashboard/page.tsx. Mobile-first. Background var(--bone).
+Build app/dashboard/page.tsx. Mobile-first.
+
+STYLING: Create styles/dashboard.css and import it at the top of this
+file. Use .db-* class names (e.g. .db-page, .db-stats, .db-card, .db-btn).
+Do NOT use Tailwind classes. Use CSS variables from design-system.css only.
+Page background: var(--bg-base).
 
 STATS BAR (always visible at top — does not scroll)
 4 KPI cards in 2×2 grid:
@@ -570,7 +605,8 @@ STATS BAR (always visible at top — does not scroll)
   "Today's Revenue" → $1,312.50 (var(--color-green))
   "Conversion Rate" → 78% (var(--color-navy))
   "Volume" → 12.4 yd³ (var(--color-stone))
-Each: var(--bg-raised) background, var(--radius), label + large bold value.
+Each: var(--bg-raised) background, border-radius var(--radius-xl),
+box-shadow var(--shadow-sm), label + large bold value.
 
 SCROLLABLE SESSION CARD FEED
 Header: "Live Work Orders"
@@ -631,6 +667,10 @@ Get water. Step outside for 5 minutes.
 ```
 TASK 8 — Schedule and Settings Pages
 
+STYLING: Both pages import styles/dashboard.css (already created in
+Task 7). Add new .db-schedule-* and .db-settings-* classes to that
+file as needed. Do NOT use Tailwind classes.
+
 PAGE 1: app/dashboard/schedule/page.tsx
 Header: "Upcoming Jobs"
 3 mock job cards (use MOCK_SESSION_BOOKED + 2 fabricated ones with
@@ -682,6 +722,10 @@ Settings: pre-filled form, Save → confirmation toast.
 ```
 TASK 9 — Operator Login Page (UI)
 
+STYLING: Create styles/auth.css and import it at the top of this file.
+Use .auth-* class names (e.g. .auth-page, .auth-card, .auth-input,
+.auth-btn). Do NOT use Tailwind classes. Use CSS variables only.
+
 Build app/login/page.tsx.
 Centered card (max-width ~400px) on var(--bg-base) background,
 vertically centered in full viewport height. Finalized design system
@@ -723,6 +767,10 @@ inline error area, and the onboarding link. Confirm the new brand renders.
 
 ```
 TASK 10 — Dashboard Layout and Navigation
+
+STYLING: Add navigation styles to styles/dashboard.css using
+.db-nav-* class names (e.g. .db-nav, .db-nav-tab, .db-nav-tab-active,
+.db-sidebar, .db-sidebar-link). Do NOT use Tailwind classes.
 
 Create app/dashboard/layout.tsx wrapping all dashboard routes.
 
@@ -1167,7 +1215,7 @@ git push origin main
 | `npm run dev` fails | Run `npm install` first in hiredax/ |
 | `adk web` fails | Run `uv sync` in dax-agent/ first |
 | Agent doesn't show tools | Check `dax_agent/__init__.py` exports `root_agent` |
-| Tailwind styles not applying | Verify tailwind.config.ts content array includes app/ and components/ |
+| Styles not applying to a page | Confirm the page imports its dedicated .css file (e.g. `import '../../styles/dashboard.css'`) and that the CSS file imports are in app/layout.tsx in the correct order: design-system.css first, globals.css second |
 | Port 3000 in use | `lsof -i :3000` then kill process, or `npm run dev -- -p 3001` |
 | Port 8080 in use | `lsof -i :8080` then kill, or `adk web --port 8081` |
 | TypeScript `any` errors | Ask Claude Code: "Fix all TypeScript strict mode errors" |
