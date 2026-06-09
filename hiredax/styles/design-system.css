@@ -1,0 +1,127 @@
+:root {
+  /* Raw palette */
+  --color-bone:         #F5F2ED;
+  --color-bone-deep:    #EDE8E0;
+  --color-navy:         #1B2238;
+  --color-navy-80:      rgba(27,34,56,0.80);
+  --color-navy-40:      rgba(27,34,56,0.40);
+  --color-navy-12:      rgba(27,34,56,0.12);
+  --color-navy-06:      rgba(27,34,56,0.06);
+  --color-green:        #7CD96B;
+  --color-green-light:  #D9F5D3;
+  --color-stone:        #8C8579;
+  --color-stone-subtle: rgba(140,133,121,0.14);
+  --color-white:        #FFFFFF;
+
+  /* Semantic — backgrounds */
+  --bg-base:         var(--color-bone);
+  --bg-raised:       var(--color-white);
+  --bg-sunken:       var(--color-bone-deep);
+  --bg-inverse:      var(--color-navy);
+  --bg-accent:       var(--color-green);
+  --bg-accent-muted: var(--color-green-light);
+
+  /* Semantic — text */
+  --text-primary:   var(--color-navy);
+  --text-secondary: var(--color-stone);
+  --text-muted:     var(--color-navy-40);
+  --text-inverse:   var(--color-bone);
+  --text-accent:    #4DAF3A;
+
+  /* Semantic — borders */
+  --border-subtle:  var(--color-navy-06);
+  --border-default: var(--color-navy-12);
+  --border-strong:  var(--color-navy-40);
+  --border-accent:  var(--color-green);
+
+  /* Status colors */
+  --status-active-bg:    var(--color-navy);
+  --status-active-text:  var(--color-bone);
+  --status-pending-bg:   var(--color-stone-subtle);
+  --status-pending-text: var(--color-stone);
+  --status-approved-bg:  var(--color-green-light);
+  --status-approved-text:#2D7A22;
+  --status-error-bg:     #FEF2F2;
+  --status-error-text:   #DC3545;
+  --status-warning-bg:   #FFF8E1;
+  --status-warning-text: #7A5A00;
+
+  /* Typography */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body:    'Manrope', system-ui, sans-serif;
+
+  /* Type scale */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-md:   17px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  42px;
+  --text-4xl:  56px;
+  --text-5xl:  72px;
+
+  /* Weights */
+  --w-light:    300;
+  --w-regular:  400;
+  --w-medium:   500;
+  --w-semibold: 600;
+  --w-bold:     700;
+
+  /* Line heights */
+  --leading-none:   1.0;
+  --leading-tight:  1.15;
+  --leading-snug:   1.3;
+  --leading-normal: 1.55;
+  --leading-loose:  1.7;
+
+  /* Letter spacing */
+  --tracking-tighter: -0.03em;
+  --tracking-tight:   -0.015em;
+  --tracking-normal:  -0.005em;
+  --tracking-wide:     0.06em;
+  --tracking-wider:    0.14em;
+
+  /* Spacing (4px base) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* Radius */
+  --radius-sm:   3px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(27,34,56,0.06);
+  --shadow-sm: 0 1px 4px rgba(27,34,56,0.08);
+  --shadow-md: 0 4px 14px rgba(27,34,56,0.10), 0 1px 3px rgba(27,34,56,0.06);
+  --shadow-lg: 0 8px 28px rgba(27,34,56,0.12), 0 2px 6px rgba(27,34,56,0.06);
+
+  /* Transitions */
+  --ease-fast:   120ms ease;
+  --ease-normal: 200ms ease;
+  --ease-slow:   320ms ease;
+
+  /* Z-index */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 100;
+  --z-modal:   200;
+  --z-toast:   300;
+
+  /* Touch target minimum */
+  --touch-min: 48px;
+}
