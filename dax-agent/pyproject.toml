@@ -1,0 +1,15 @@
+[project]
+name = "dax-agent"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk[gcp]>=1.0.0",
+    "mcp>=1.0.0",
+    "requests>=2.32.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]

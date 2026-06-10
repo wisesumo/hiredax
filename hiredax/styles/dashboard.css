@@ -750,8 +750,163 @@
   opacity: 1;
 }
 
+/* ── Navigation (.db-nav-*) ──────────────────────── */
+
+/* Mobile sticky header (hidden ≥768px) */
+.db-nav-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 56px;
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border-default);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-raised);
+}
+
+/* Mobile bottom tab bar (hidden ≥768px) */
+.db-nav-mobile {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-raised);
+  border-top: 1px solid var(--border-default);
+  z-index: var(--z-raised);
+}
+
+.db-nav-mobile-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 64px;
+  min-width: 64px;
+  text-decoration: none;
+  color: var(--color-navy-40);
+  position: relative;
+  transition: color var(--ease-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.db-nav-mobile-tab--active {
+  color: var(--color-green);
+  font-weight: var(--w-semibold);
+}
+
+.db-nav-mobile-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: inherit;
+}
+
+/* Desktop sidebar (hidden <768px) */
+.db-nav-sidebar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 240px;
+  background: var(--bg-raised);
+  border-right: 1px solid var(--border-default);
+  z-index: var(--z-raised);
+  padding: 24px 0;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.db-nav-logo {
+  margin: 0 0 24px 24px;
+}
+
+.db-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: var(--w-regular);
+  transition: background var(--ease-fast), color var(--ease-fast);
+}
+
+.db-nav-link:hover {
+  background: var(--bg-sunken);
+  color: var(--color-navy);
+}
+
+.db-nav-link--active {
+  color: var(--color-green);
+  font-weight: var(--w-semibold);
+  border-left: 3px solid var(--color-green);
+  padding-left: 21px;
+  background: rgba(217, 245, 211, 0.30);
+}
+
+.db-nav-link--active:hover {
+  color: var(--color-green);
+  background: rgba(217, 245, 211, 0.45);
+}
+
+/* Icon wrapper — anchors the badge */
+.db-nav-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Notification badge */
+.db-nav-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  background: var(--status-error-text);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Content area */
+.db-nav-content {
+  min-height: 100vh;
+  background: var(--bg-base);
+  padding-top: 56px;    /* clears mobile sticky header */
+  padding-bottom: 80px; /* clears fixed tab bar */
+}
+
 /* ── Desktop tweaks (≥768px) ─────────────────────── */
 @media (min-width: 768px) {
+  .db-nav-mobile-header { display: none; }
+  .db-nav-mobile        { display: none; }
+  .db-nav-sidebar       { display: flex; }
+
+  .db-nav-content {
+    margin-left: 240px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
   .db-stats-section {
     padding: var(--space-6) var(--space-8) 0;
   }
