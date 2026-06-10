@@ -1,0 +1,173 @@
+/* ── Auth page layout ────────────────────────────── */
+.auth-page {
+  min-height: 100vh;
+  background: var(--bg-base);
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* ── Card ────────────────────────────────────────── */
+.auth-card {
+  background: var(--bg-raised);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Logo block ──────────────────────────────────── */
+.auth-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.auth-byline {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-accent);
+  margin: 0;
+  margin-top: 4px;
+}
+
+.auth-spacer {
+  height: 24px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* ── Form fields ─────────────────────────────────── */
+.auth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.auth-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+.auth-input {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  padding: 11px var(--space-3);
+  border: 1.5px solid var(--color-navy-12);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-navy);
+  width: 100%;
+  min-height: 48px;
+  outline: none;
+  transition: border-color var(--ease-fast), box-shadow var(--ease-fast);
+  box-sizing: border-box;
+}
+
+.auth-input::placeholder {
+  color: var(--color-navy-40);
+}
+
+.auth-input:hover {
+  border-color: var(--color-navy-40);
+}
+
+.auth-input:focus {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(124, 217, 107, 0.15);
+}
+
+/* ── Sign In button ──────────────────────────────── */
+.auth-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: var(--space-4);
+  padding: 0 var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--color-green);
+  color: var(--color-navy);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  transition: background var(--ease-fast), opacity var(--ease-fast);
+}
+
+.auth-btn:hover:not(:disabled) {
+  background: #6CCA5B;
+}
+
+.auth-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* ── Inline error ────────────────────────────────── */
+.auth-error {
+  width: 100%;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--status-error-text);
+  text-align: center;
+  line-height: var(--leading-normal);
+  min-height: 20px;
+}
+
+/* ── Divider ─────────────────────────────────────── */
+.auth-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border-default);
+  margin: var(--space-6) 0;
+}
+
+/* ── Register link ───────────────────────────────── */
+.auth-register {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: var(--leading-normal);
+}
+
+.auth-register-link {
+  color: var(--text-accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--ease-fast);
+}
+
+.auth-register-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Footer ──────────────────────────────────────── */
+.auth-footer {
+  margin-top: var(--space-6);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 440px) {
+  .auth-card { padding: 32px 24px; }
+}
