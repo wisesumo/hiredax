@@ -1,0 +1,23 @@
+%% HireDax system architecture — same diagram embedded in README.md
+flowchart TB
+    Caller(("📞 Caller")) -->|"inbound call"| Vapi["Vapi voice layer<br/>Gemini 3.1 Flash Live"]
+    Vapi -->|"tool calls"| Webhook["/api/vapi/webhook<br/>Next.js on Vercel"]
+    Webhook -->|"SMS portal link — Surge<br/>(sandbox pending carrier reg.)"| Phone["📱 Customer phone"]
+    Phone --> Portal["Customer Portal (PWA)<br/>/portal/[token]"]
+    Portal -->|"photo upload"| Storage[("Firebase Storage")]
+
+    subgraph CloudRun["Cloud Run · us-central1 · min-instances 1"]
+        Estimator["EstimatorAgent<br/>root LlmAgent · Gemini 2.5 Flash"]
+        Grounding["GroundingAgent<br/>Gemini 2.5 Flash"]
+        Estimator -->|"A2A delegation<br/>(AgentTool)"| Grounding
+        Grounding --> GSearch["google_search<br/>ADK built-in grounding"]
+    end
+
+    Storage -->|"Gemini 2.5 Flash Vision"| Estimator
+    Estimator -->|"McpToolset"| MCP["HireDax MCP server<br/>Firestore session tools"]
+    MCP --> Firestore[("Firestore<br/>session state machine")]
+    Webhook <--> Firestore
+
+    Firestore <-->|"onSnapshot (live)"| Dashboard["Operator Dashboard<br/>Firebase Auth"]
+    Dashboard -->|"🔒 EXPERT SEAL GATE<br/>Approve & Release Quote"| Firestore
+    Firestore -->|"price released only when<br/>quote_approved"| Webhook
