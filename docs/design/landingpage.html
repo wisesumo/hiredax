@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HireDax — AI Estimating Agent for Home Services</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='22' width='28' height='4' fill='%237CD96B' rx='2'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bone: #F5F2ED;
+      --color-navy: #1B2238;
+      --color-green: #7CD96B;
+      --color-green-light: #D9F5D3;
+      --color-stone: #8C8579;
+      --color-white: #FFFFFF;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Manrope', system-ui, sans-serif;
+      --radius-md: 6px;
+      --radius-xl: 16px;
+      --shadow-md: 0 4px 14px rgba(27,34,56,0.10);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--color-bone); color: var(--color-navy); line-height: 1.55; padding-bottom: 60px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    
+    /* Header & Logo */
+    .nav-header { background: var(--color-white); border-bottom: 1px solid rgba(27,34,56,0.12); height: 76px; display: flex; align-items: center; }
+    .nav-container { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    .logo-lift { display: inline-flex; align-items: baseline; text-decoration: none; font-size: 24px; }
+    .logo-lift .ll-hire { font-weight: 700; color: var(--color-navy); }
+    .logo-lift .ll-dax-wrap { position: relative; display: inline-flex; flex-direction: column; }
+    .logo-lift .ll-dax { font-weight: 700; color: var(--color-navy); transform: translateY(-0.19em); margin-left: 2px; }
+    .logo-lift .ll-line { position: absolute; height: 3px; background: var(--color-green); border-radius: 99px; bottom: 0; left: 2px; right: 0; }
+    
+    /* Hero Section */
+    .hero { padding: 100px 0; text-align: center; }
+    .hero-title { font-family: var(--font-display); font-size: 48px; font-weight: 400; line-height: 1.2; max-width: 800px; margin: 0 auto 24px; }
+    .hero-desc { font-size: 18px; color: var(--color-stone); max-width: 600px; margin: 0 auto 40px; }
+    
+    /* Form Card */
+    .waitlist-card { background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid rgba(27,34,56,0.12); box-shadow: var(--shadow-md); padding: 40px; max-width: 500px; margin: 0 auto; }
+    .waitlist-card h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 12px; }
+    .waitlist-card p { font-size: 14px; color: var(--color-stone); margin-bottom: 24px; }
+    .form-group { display: flex; flex-direction: column; gap: 16px; }
+    .form-input { padding: 12px 16px; border: 1.5px solid rgba(27,34,56,0.12); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 14px; width: 100%; }
+    .form-input:focus { outline: none; border-color: var(--color-green); }
+    .btn { background: var(--color-green); color: var(--color-navy); font-weight: 600; padding: 14px; border: none; border-radius: var(--radius-md); cursor: pointer; font-family: var(--font-body); transition: transform 120ms ease; }
+    .btn:hover { transform: translateY(-1px); background: #6CCA5B; }
+  </style>
+</head>
+<body>
+  <nav class="nav-header">
+    <div class="container nav-container">
+      <a href="#" class="logo-lift">
+        <span class="ll-hire">Hire</span><span class="ll-dax-wrap"><span class="ll-dax">Dax</span><div class="ll-line"></div></span>
+      </a>
+      <span style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-stone);">Private Beta</span>
+    </div>
+  </nav>
+
+  <main class="container hero">
+    <h1 class="hero-title">You get the job done. We'll handle getting you more.</h1>
+    <p class="hero-desc">Capture leads, ask smart follow-up questions, generate estimates, and automatically book your next job while you stay in the truck.</p>
+    
+    <div class="waitlist-card">
+      <h3>Join the Private Beta Waitlist</h3>
+      <p>Our onboarding spaces are currently limited. Register your trades business below to secure your spot.</p>
+      <form onsubmit="event.preventDefault(); alert('Placeholder: Added to waitlist.');">
+        <div class="form-group">
+          <input type="text" placeholder="Business Name" class="form-input" required>
+          <input type="email" placeholder="Email Address" class="form-input" required>
+          <button type="submit" class="btn">Request Private Access</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

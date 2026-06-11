@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your HireDax Project Proposal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bone: #F5F2ED;
+      --color-bone-deep: #EDE8E0;
+      --color-navy: #1B2238;
+      --color-green: #7CD96B;
+      --color-stone: #8C8579;
+      --color-white: #FFFFFF;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Manrope', system-ui, sans-serif;
+      --radius-md: 6px;
+      --radius-xl: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--color-bone); color: var(--color-navy); padding: 48px 24px; line-height: 1.55; }
+    .portal-container { max-width: 680px; margin: 0 auto; }
+    
+    .invoice-card { background: var(--color-white); border-radius: var(--radius-xl); border: 1px solid rgba(27,34,56,0.12); padding: 40px; box-shadow: 0 4px 14px rgba(27,34,56,0.06); }
+    .brand-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--color-bone-deep); }
+    
+    .proposal-title { font-family: var(--font-display); font-size: 28px; font-weight: 400; margin-bottom: 8px; }
+    .proposal-subtitle { font-size: 14px; color: var(--color-stone); margin-bottom: 32px; }
+    
+    /* Photo Asset Placement Area */
+    .photo-placeholder-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+    .photo-box { background: var(--color-bone-deep); aspect-ratio: 4/3; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--color-stone); font-size: 12px; font-weight: 500; border: 1px dashed rgba(27,34,56,0.2); }
+    
+    /* Invoice Layout */
+    .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+    .invoice-row th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-stone); padding-bottom: 12px; border-bottom: 1px solid var(--color-bone-deep); }
+    .invoice-row td { padding: 16px 0; font-size: 14px; border-bottom: 1px solid var(--color-bone-deep); }
+    .total-row td { font-family: var(--font-display); font-size: 24px; font-weight: 600; padding-top: 24px; border-bottom: none; }
+    
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+    .btn { padding: 14px; border-radius: var(--radius-md); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-align: center; text-decoration: none; }
+    .btn-approve { background: var(--color-green); color: var(--color-navy); }
+    .btn-approve:hover { background: #6CCA5B; }
+    .btn-decline { background: transparent; color: var(--color-stone); border: 1.5px solid rgba(27,34,56,0.15); }
+    .btn-decline:hover { background: var(--color-bone); color: var(--color-navy); }
+  </style>
+</head>
+<body>
+
+  <div class="portal-container">
+    <div class="invoice-card">
+      <div class="brand-meta">
+        <span style="font-size: 14px; font-weight: 700; letter-spacing: -0.02em;">PROJECT PROPOSAL</span>
+        <span style="font-size: 12px; color: var(--color-stone); font-family: monospace;">PROP-2841</span>
+      </div>
+
+      <h1 class="proposal-title">Residential Service Estimate</h1>
+      <p class="proposal-subtitle">Calculated automatically by Dax based on your custom business parameters.</p>
+
+      <div class="photo-placeholder-grid">
+        <div class="photo-box">📷 View Image 1</div>
+        <div class="photo-box">📷 View Image 2</div>
+        <div class="photo-box">📷 View Image 3</div>
+      </div>
+
+      <table class="invoice-table">
+        <thead>
+          <tr class="invoice-row">
+            <th>Description</th>
+            <th style="text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="invoice-row">
+            <td>Residential Base Removal Service (1/2 Truck Volume Capacity Line Allocation)</td>
+            <td style="text-align: right; font-weight: 500;">$290.00</td>
+          </tr>
+          <tr class="invoice-row">
+            <td>Remote Operating Service Distance Index / Fuel Optimization Surcharge</td>
+            <td style="text-align: right; font-weight: 500;">$50.00</td>
+          </tr>
+          <tr class="total-row">
+            <td>Total Proposed Cost</td>
+            <td style="text-align: right;">$340.00</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="action-row">
+        <button class="btn btn-decline" onclick="alert('Placeholder: Declined Proposal')">Decline</button>
+        <button class="btn btn-approve" onclick="alert('Placeholder: Approved and Booked!')">Approve & Book Job</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

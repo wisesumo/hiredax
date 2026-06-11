@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HireDax Dashboard — Operator Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bone: #F5F2ED;
+      --color-bone-deep: #EDE8E0;
+      --color-navy: #1B2238;
+      --color-green: #7CD96B;
+      --color-green-light: #D9F5D3;
+      --color-stone: #8C8579;
+      --color-white: #FFFFFF;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'Manrope', system-ui, sans-serif;
+      --radius-lg: 10px;
+      --radius-xl: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--color-bone); color: var(--color-navy); display: flex; min-height: 100vh; overflow: hidden; }
+    
+    /* Sidebar Navigation */
+    .sidebar { width: 240px; background: var(--color-navy); color: var(--color-bone); padding: 32px 0; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-brand { padding: 0 24px 32px; border-bottom: 1px solid rgba(245,242,237,0.1); margin-bottom: 24px; }
+    .logo-lift { display: inline-flex; align-items: baseline; text-decoration: none; font-size: 22px; }
+    .logo-lift .ll-hire { font-weight: 700; color: var(--color-bone); }
+    .logo-lift .ll-dax-wrap { position: relative; display: inline-flex; flex-direction: column; }
+    .logo-lift .ll-dax { font-weight: 700; color: var(--color-bone); transform: translateY(-0.19em); margin-left: 2px; }
+    .logo-lift .ll-line { position: absolute; height: 3px; background: var(--color-green); border-radius: 99px; bottom: 0; left: 2px; right: 0; }
+    
+    .nav-links { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item a { display: flex; align-items: center; gap: 12px; padding: 12px 24px; color: rgba(245,242,237,0.6); text-decoration: none; font-size: 14px; font-weight: 500; border-left: 3px solid transparent; transition: all 120ms ease; }
+    .nav-item a:hover, .nav-item.active a { color: var(--color-bone); background: rgba(245,242,237,0.05); border-left-color: var(--color-green); }
+    .nav-item.active a { color: var(--color-green); }
+
+    /* Main Content Area */
+    .main-content { flex: 1; padding: 48px; overflow-y: auto; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+    .page-title { font-family: var(--font-display); font-size: 32px; font-weight: 400; }
+    .badge { background: var(--color-green-light); color: #2D7A22; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    .badge::before { content: ''; width: 6px; height: 6px; background: currentColor; border-radius: 50%; }
+
+    /* Grid Analytics Cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+    .stat-card { background: var(--color-white); border: 1px solid rgba(27,34,56,0.12); border-radius: var(--radius-xl); padding: 24px; box-shadow: 0 1px 4px rgba(27,34,56,0.08); }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-stone); margin-bottom: 12px; }
+    .stat-value { font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1; }
+    
+    /* Content Placeholder Box */
+    .placeholder-view { margin-top: 40px; border: 2px dashed rgba(27,34,56,0.15); border-radius: var(--radius-xl); padding: 60px; text-align: center; color: var(--color-stone); }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="#" class="logo-lift">
+        <span class="ll-hire">Hire</span><span class="ll-dax-wrap"><span class="ll-dax">Dax</span><div class="ll-line"></div></span>
+      </a>
+    </div>
+    <ul class="nav-links">
+      <li class="nav-item active"><a href="#">📊 Dashboard</a></li>
+      <li class="nav-item"><a href="#">💼 Booked Jobs</a></li>
+      <li class="nav-item"><a href="#">📞 Call Activity logs</a></li>
+      <li class="nav-item"><a href="#">⚙️ Pricing Rules</a></li>
+    </ul>
+  </aside>
+
+  <main class="main-content">
+    <div class="header-row">
+      <h1 class="page-title">Workspace Dashboard</h1>
+      <span class="badge">Dax Estimator Active</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Calls Answered</div>
+        <div class="stat-value">47</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Jobs Booked</div>
+        <div class="stat-value">31</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Recovered Revenue</div>
+        <div class="stat-value">$14,250</div>
+      </div>
+    </div>
+
+    <div class="placeholder-view">
+      <h3>Active Call Tracking Stream</h3>
+      <p style="font-size: 14px; margin-top: 8px;">Firebase initialization hook success. Realtime pipeline streams will output here once live data rules bind.</p>
+    </div>
+  </main>
+
+</body>
+</html>
