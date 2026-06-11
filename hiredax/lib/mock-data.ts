@@ -1,8 +1,8 @@
-import type { Operator, Session, Timestamp } from "./types";
+import { Timestamp } from "firebase/firestore";
+import type { Operator, Session } from "./types";
 
 function ts(d: Date): Timestamp {
-  const seconds = Math.floor(d.getTime() / 1000);
-  return { seconds, nanoseconds: 0, toDate: () => d };
+  return Timestamp.fromDate(d);
 }
 
 const NOW = new Date("2026-06-09T10:00:00-05:00");

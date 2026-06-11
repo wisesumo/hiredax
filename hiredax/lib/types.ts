@@ -1,5 +1,6 @@
-// Timestamp placeholder — replaced with firebase/firestore Timestamp in Task 11
-export type Timestamp = { seconds: number; nanoseconds: number; toDate(): Date };
+import type { Timestamp } from "firebase/firestore";
+
+export type { Timestamp };
 
 export type SessionStatus =
   | "call_active"

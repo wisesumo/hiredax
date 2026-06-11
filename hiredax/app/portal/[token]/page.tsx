@@ -43,6 +43,7 @@ function fmt(n: number) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PortalPage({ params }: { params: { token: string } }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in Task 14 (Firestore session fetch)
   const { token } = params;
 
   // Dev switcher — controls which state is rendered
