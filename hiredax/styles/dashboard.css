@@ -533,6 +533,14 @@
   padding: var(--space-12) 0;
 }
 
+.db-auth-check {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-base);
+}
+
 .db-error-card {
   background: var(--status-error-bg);
   border-radius: var(--radius-xl);

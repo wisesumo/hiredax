@@ -36,7 +36,7 @@ function useToast() {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { operator } = useAuth();
+  const { operator, signOut } = useAuth();
 
   // Section 1 — Business Profile (hydrated from operators/{uid})
   const [companyName, setCompanyName] = useState("");
@@ -59,12 +59,14 @@ export default function SettingsPage() {
   // Section 4 — Sign Out
   const [signingOut, setSigningOut] = useState(false);
 
-  function handleSignOut() {
+  async function handleSignOut() {
     setSigningOut(true);
-    // TODO Task 13: wire to Firebase signOut()
-    setTimeout(() => {
+    try {
+      await signOut();
       router.push("/login");
-    }, 800);
+    } catch {
+      setSigningOut(false);
+    }
   }
 
   return (

@@ -1,43 +1,60 @@
 "use client";
 
 import "../../styles/dashboard.css";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { ClipboardList, Calendar, Settings2 } from "lucide-react";
-import { Logo } from "@/components/ui";
-
-const NAV_ITEMS = [
-  {
-    href: "/dashboard",
-    label: "Work Orders",
-    Icon: ClipboardList,
-    badge: "1",
-  },
-  {
-    href: "/dashboard/schedule",
-    label: "Schedule",
-    Icon: Calendar,
-    badge: null,
-  },
-  {
-    href: "/dashboard/settings",
-    label: "Settings",
-    Icon: Settings2,
-    badge: null,
-  },
-] as const;
+import { Logo, Spinner } from "@/components/ui";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth-context";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // TODO Task 13: add auth guard here
-  // const { operator, loading } = useAuth()
-  // if (loading) return <Spinner />
-  // if (!operator) redirect('/login')
-
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Auth guard — logged-out visitors never see the dashboard
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, user, router]);
+
+  // Live badge — number of sessions waiting on the Expert Seal
+  useEffect(() => {
+    if (!user) return;
+    const pendingQuery = query(
+      collection(db, "sessions"),
+      where("operatorId", "==", user.uid),
+      where("status", "==", "pending_approval")
+    );
+    const unsubscribe = onSnapshot(pendingQuery, (snapshot) => {
+      setPendingCount(snapshot.size);
+    });
+    return unsubscribe;
+  }, [user]);
+
+  if (loading || !user) {
+    return (
+      <div className="db-auth-check" role="status" aria-label="Checking sign-in">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  const badge = pendingCount > 0 ? String(pendingCount) : null;
+  const navItems = [
+    { href: "/dashboard", label: "Work Orders", Icon: ClipboardList, badge },
+    { href: "/dashboard/schedule", label: "Schedule", Icon: Calendar, badge: null },
+    { href: "/dashboard/settings", label: "Settings", Icon: Settings2, badge: null },
+  ] as const;
 
   return (
     <>
@@ -52,7 +69,7 @@ export default function DashboardLayout({
           <Logo size="sm" />
         </div>
 
-        {NAV_ITEMS.map(({ href, label, Icon, badge }) => {
+        {navItems.map(({ href, label, Icon, badge: itemBadge }) => {
           const active = pathname === href;
           return (
             <Link
@@ -63,9 +80,9 @@ export default function DashboardLayout({
             >
               <span className="db-nav-icon-wrap">
                 <Icon size={18} aria-hidden />
-                {badge && (
-                  <span className="db-nav-badge" aria-label={`${badge} pending`}>
-                    {badge}
+                {itemBadge && (
+                  <span className="db-nav-badge" aria-label={`${itemBadge} pending`}>
+                    {itemBadge}
                   </span>
                 )}
               </span>
@@ -80,7 +97,7 @@ export default function DashboardLayout({
 
       {/* Mobile — fixed bottom tab bar */}
       <nav className="db-nav-mobile" aria-label="Dashboard navigation">
-        {NAV_ITEMS.map(({ href, label, Icon, badge }) => {
+        {navItems.map(({ href, label, Icon, badge: itemBadge }) => {
           const active = pathname === href;
           return (
             <Link
@@ -91,9 +108,9 @@ export default function DashboardLayout({
             >
               <span className="db-nav-icon-wrap">
                 <Icon size={20} aria-hidden />
-                {badge && (
-                  <span className="db-nav-badge" aria-label={`${badge} pending`}>
-                    {badge}
+                {itemBadge && (
+                  <span className="db-nav-badge" aria-label={`${itemBadge} pending`}>
+                    {itemBadge}
                   </span>
                 )}
               </span>
