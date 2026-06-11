@@ -5,7 +5,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Logo, Spinner, StarRating } from "@/components/ui";
 import { MOCK_SESSION_PENDING } from "@/lib/mock-data";
 
-// TODO: remove before Task 12 (portal Firestore wiring)
 type PortalViewState =
   | "link_sent"
   | "photos_uploading"
@@ -13,15 +12,6 @@ type PortalViewState =
   | "quote_approved"
   | "booking_confirmed"
   | "job_complete";
-
-const DEV_STATES: { value: PortalViewState; label: string }[] = [
-  { value: "link_sent",         label: "1 — Link Sent (Upload)" },
-  { value: "photos_uploading",  label: "2 — Photos Uploading" },
-  { value: "analysis_running",  label: "3 — Analysis Running" },
-  { value: "quote_approved",    label: "4 — Quote Approved" },
-  { value: "booking_confirmed", label: "5 — Booking Confirmed" },
-  { value: "job_complete",      label: "6 — Job Complete" },
-];
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 
@@ -46,9 +36,8 @@ export default function PortalPage({ params }: { params: { token: string } }) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in Task 14 (Firestore session fetch)
   const { token } = params;
 
-  // Dev switcher — controls which state is rendered
-  // TODO: remove before Task 12 (portal Firestore wiring)
-  const [devState, setDevState] = useState<PortalViewState>("link_sent");
+  // Driven by Firestore session.status in Task 14
+  const [viewState, setViewState] = useState<PortalViewState>("link_sent");
 
   // Photo upload (STATE 1 & 2)
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,7 +71,7 @@ export default function PortalPage({ params }: { params: { token: string } }) {
   // ── Canvas setup (runs whenever state switches to booking_confirmed) ──────
 
   useEffect(() => {
-    if (devState !== "booking_confirmed") return;
+    if (viewState !== "booking_confirmed") return;
     setHasDrawn(false);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -103,7 +92,7 @@ export default function PortalPage({ params }: { params: { token: string } }) {
       ctx.lineJoin    = "round";
     }, 50);
     return () => clearTimeout(timer);
-  }, [devState]);
+  }, [viewState]);
 
   // ── Canvas drawing ───────────────────────────────────────────────────────
 
@@ -154,18 +143,17 @@ export default function PortalPage({ params }: { params: { token: string } }) {
     setHasDrawn(false);
   }, []);
 
-  // ── Mock data for STATE 4 ────────────────────────────────────────────────
+  // ── Mock data for STATE 4 — replaced by live session data in Task 14 ──────
 
-  const ar       = MOCK_SESSION_PENDING.analysisResult!;
-  const items    = ar.items;
-  const subtotal = ar.estimatedPrice;                    // $412.50 (base + volume)
-  const interior = ar.surcharges.interior ?? 0;          // $50
-  const total    = subtotal;                             // task spec shows $412.50
+  const ar     = MOCK_SESSION_PENDING.analysisResult!;
+  const items  = ar.items;
+  const volume = ar.volume_yd3;
+  const total  = ar.suggestedPrice;
 
   // ── State renderers ──────────────────────────────────────────────────────
 
   function renderState() {
-    switch (devState) {
+    switch (viewState) {
 
       // ── STATE 1 — link_sent ──────────────────────────────────────────
       case "link_sent":
@@ -284,31 +272,18 @@ export default function PortalPage({ params }: { params: { token: string } }) {
 
                 {/* Items */}
                 <div className="portal-items">
-                  {items.map((item, i) => (
-                    <div key={i} className="portal-item-row">
-                      <span className="portal-item-name">
-                        {item.quantity > 1 ? `${item.name} (×${item.quantity})` : item.name}
-                      </span>
-                      <span className="portal-item-meta">
-                        {item.volume} cu yd
-                      </span>
+                  {items.map((item) => (
+                    <div key={item} className="portal-item-row">
+                      <span className="portal-item-name">{item}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Subtotal */}
+                {/* Volume */}
                 <div className="portal-line-row">
-                  <span>Subtotal</span>
-                  <span>{fmt(subtotal - interior)}</span>
+                  <span>Estimated volume</span>
+                  <span>{volume} cu yd</span>
                 </div>
-
-                {/* Surcharges */}
-                {interior > 0 && (
-                  <div className="portal-line-row">
-                    <span>Interior access</span>
-                    <span>+{fmt(interior)}</span>
-                  </div>
-                )}
 
                 {/* Total */}
                 <div className="portal-total-row">
@@ -377,7 +352,7 @@ export default function PortalPage({ params }: { params: { token: string } }) {
                 type="button"
                 className="portal-btn portal-btn-primary"
                 disabled={!hasDrawn}
-                onClick={() => setDevState("job_complete")}
+                onClick={() => setViewState("job_complete")}
               >
                 Sign &amp; Confirm Work Order
               </button>
@@ -442,26 +417,7 @@ export default function PortalPage({ params }: { params: { token: string } }) {
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className={`portal-page${process.env.NODE_ENV === "development" ? " portal-dev-mode" : ""}`}>
-
-      {/* DEV — state switcher. TODO: remove before Task 12 */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="portal-dev-bar">
-          <span className="portal-dev-label">[DEV] Preview State:</span>
-          <select
-            className="portal-dev-select"
-            value={devState}
-            onChange={(e) => setDevState(e.target.value as PortalViewState)}
-          >
-            {DEV_STATES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
+    <div className="portal-page">
       <div className="portal-container">
         <header className="portal-header">
           <Logo size="sm" />

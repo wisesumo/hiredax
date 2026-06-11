@@ -1,9 +1,9 @@
 "use client";
 
 import "../../../styles/dashboard.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MOCK_OPERATOR } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth-context";
 
 const HOURS = [
   { value: "06:00", label: "6:00 AM" },
@@ -36,13 +36,20 @@ function useToast() {
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { operator } = useAuth();
 
-  // Section 1 — Business Profile
-  const [companyName, setCompanyName] = useState(MOCK_OPERATOR.companyName);
-  const [businessPhone, setBusinessPhone] = useState(MOCK_OPERATOR.phone);
-  const [openHour, setOpenHour] = useState(MOCK_OPERATOR.operatingHours.open);
-  const [closeHour, setCloseHour] = useState(MOCK_OPERATOR.operatingHours.close);
+  // Section 1 — Business Profile (hydrated from operators/{uid})
+  const [companyName, setCompanyName] = useState("");
+  const [businessPhone, setBusinessPhone] = useState("");
+  const [openHour, setOpenHour] = useState("08:00");
+  const [closeHour, setCloseHour] = useState("20:00");
   const profileToast = useToast();
+
+  useEffect(() => {
+    if (!operator) return;
+    setCompanyName(operator.businessName);
+    setBusinessPhone(operator.phone);
+  }, [operator]);
 
   // Section 3 — Notifications
   const [pushEnabled, setPushEnabled] = useState(true);

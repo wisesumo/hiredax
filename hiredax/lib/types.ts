@@ -17,40 +17,32 @@ export type SessionStatus =
   | "rated";
 
 export interface AnalysisResult {
-  items: { name: string; volume: number; quantity: number }[];
-  totalVolume: number;
-  estimatedPrice: number;
-  surcharges: Record<string, number>;
+  items: string[];
+  volume_yd3: number;
+  confidence: number;
+  suggestedPrice: number;
 }
 
 export interface Operator {
-  id: string;
-  companyName: string;
+  uid: string;
+  email: string;
+  businessName: string;
   phone: string;
-  forwardingNumber: string;
-  operatingHours: { open: string; close: string };
-  equipment: ("dumpster" | "flatbed" | "pickup")[];
-  serviceRadius: number;
-  serviceZips: string[];
-  taskDurations: Record<string, { label: string; hours: number; flatRate: number }>;
-  onboardingComplete: boolean;
+  plan: string;
   createdAt: Timestamp;
 }
 
 export interface Session {
-  token: string;
+  id: string;
   operatorId: string;
-  customerPhone: string;
   customerName: string;
+  customerPhone: string;
   status: SessionStatus;
-  photos: string[];
+  portalToken: string;
+  photoUrls: string[];
   analysisResult: AnalysisResult | null;
+  suggestedPrice: number | null;
   approvedPrice: number | null;
-  operatorOverride: boolean;
-  bookingSlot: string | null;
-  signatureUrl: string | null;
-  rating: number | null;
-  feedbackNote: string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

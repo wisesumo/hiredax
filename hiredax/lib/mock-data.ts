@@ -1,3 +1,5 @@
+// Reference fixtures only — NOT imported by any page component.
+// Live data comes from Firestore (seeded by scripts/seed.ts).
 import { Timestamp } from "firebase/firestore";
 import type { Operator, Session } from "./types";
 
@@ -5,82 +7,72 @@ function ts(d: Date): Timestamp {
   return Timestamp.fromDate(d);
 }
 
-const NOW = new Date("2026-06-09T10:00:00-05:00");
+const NOW = new Date("2026-06-10T10:00:00-05:00");
 const HOUR = 60 * 60 * 1000;
 
 export const MOCK_OPERATOR: Operator = {
-  id: "op-001",
-  companyName: "ATL Junk Pros",
-  phone: "678-555-0100",
-  forwardingNumber: "",
-  operatingHours: { open: "08:00", close: "20:00" },
-  equipment: ["dumpster", "pickup"],
-  serviceRadius: 25,
-  serviceZips: ["30213", "30214", "30215"],
-  taskDurations: {},
-  onboardingComplete: true,
+  uid: "op-demo",
+  email: "demo@hiredax.com",
+  businessName: "Demo Hauling Co",
+  phone: "+14045550123",
+  plan: "pro",
   createdAt: ts(new Date(NOW.getTime() - 30 * 24 * HOUR)),
 };
 
 export const MOCK_SESSION_PENDING: Session = {
-  token: "session-demo-001",
-  operatorId: "op-001",
-  customerName: "Marcus Williams",
-  customerPhone: "+14045550123",
+  id: "demo-session-001",
+  operatorId: "op-demo",
+  customerName: "Marcus Johnson",
+  customerPhone: "+14045550199",
   status: "pending_approval",
-  photos: [],
+  portalToken: "demo-token-001",
+  photoUrls: [
+    "https://placehold.co/400x300?text=Couch",
+    "https://placehold.co/400x300?text=Mattress",
+  ],
   analysisResult: {
-    items: [
-      { name: "couch",           volume: 1.5, quantity: 1 },
-      { name: "mattress",        volume: 1.2, quantity: 1 },
-      { name: "cardboard boxes", volume: 0.8, quantity: 6 },
-    ],
-    totalVolume: 3.5,
-    estimatedPrice: 412.50,
-    surcharges: { heavy_items: 0, stairs: 0, interior: 50 },
+    items: ["Sectional sofa", "Queen mattress", "Dresser"],
+    volume_yd3: 4.2,
+    confidence: 0.87,
+    suggestedPrice: 285,
   },
+  suggestedPrice: 285,
   approvedPrice: null,
-  operatorOverride: false,
-  bookingSlot: null,
-  signatureUrl: null,
-  rating: null,
-  feedbackNote: null,
   createdAt: ts(new Date(NOW.getTime() - 2 * HOUR)),
   updatedAt: ts(new Date(NOW.getTime() - 10 * 60 * 1000)),
 };
 
 export const MOCK_SESSION_APPROVED: Session = {
-  token: "session-demo-002",
-  operatorId: "op-001",
-  customerName: "Sheila Thompson",
-  customerPhone: "+14045550199",
+  id: "demo-session-002",
+  operatorId: "op-demo",
+  customerName: "Linda Park",
+  customerPhone: "+14045550177",
   status: "quote_approved",
-  photos: [],
-  analysisResult: null,
-  approvedPrice: 375,
-  operatorOverride: false,
-  bookingSlot: null,
-  signatureUrl: null,
-  rating: null,
-  feedbackNote: null,
+  portalToken: "demo-token-002",
+  photoUrls: ["https://placehold.co/400x300?text=Appliances"],
+  analysisResult: {
+    items: ["Refrigerator", "Washing machine"],
+    volume_yd3: 2.8,
+    confidence: 0.91,
+    suggestedPrice: 195,
+  },
+  suggestedPrice: 195,
+  approvedPrice: 195,
   createdAt: ts(new Date(NOW.getTime() - 4 * HOUR)),
   updatedAt: ts(new Date(NOW.getTime() - 3 * HOUR)),
 };
 
 export const MOCK_SESSION_BOOKED: Session = {
-  token: "session-demo-003",
-  operatorId: "op-001",
-  customerName: "David Chen",
-  customerPhone: "+14045550177",
+  id: "demo-session-003",
+  operatorId: "op-demo",
+  customerName: "Tony Rivera",
+  customerPhone: "+14045550155",
   status: "booking_confirmed",
-  photos: [],
+  portalToken: "demo-token-003",
+  photoUrls: [],
   analysisResult: null,
-  approvedPrice: 525,
-  operatorOverride: false,
-  bookingSlot: "2:00 PM – 4:00 PM today",
-  signatureUrl: null,
-  rating: null,
-  feedbackNote: null,
+  suggestedPrice: 150,
+  approvedPrice: 150,
   createdAt: ts(new Date(NOW.getTime() - 6 * HOUR)),
   updatedAt: ts(new Date(NOW.getTime() - 5 * HOUR)),
 };

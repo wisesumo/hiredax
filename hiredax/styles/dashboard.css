@@ -185,6 +185,14 @@
   color: var(--color-navy-40);
 }
 
+.db-photo-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
 .db-total-volume {
   font-size: var(--text-sm);
   font-weight: 600;
@@ -517,6 +525,21 @@
   text-align: center;
   font-size: var(--text-sm);
   color: var(--color-stone);
+}
+
+.db-loading-wrap {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-12) 0;
+}
+
+.db-error-card {
+  background: var(--status-error-bg);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--status-error-text);
 }
 
 /* ── Settings page (.db-settings-*) ─────────────── */

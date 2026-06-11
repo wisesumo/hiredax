@@ -12,53 +12,10 @@
   padding: 0 20px 80px;
 }
 
-/* Offset content below the dev bar */
-.portal-page.portal-dev-mode .portal-container {
-  padding-top: 52px;
-}
-
 .portal-header {
   padding: 24px 0 20px;
   display: flex;
   justify-content: center;
-}
-
-/* ── Dev switcher ───────────────────────────────── */
-
-.portal-dev-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(27, 34, 56, 0.94);
-  backdrop-filter: blur(4px);
-  z-index: 999;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.portal-dev-label {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-green);
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-}
-
-.portal-dev-select {
-  font-family: var(--font-body);
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-bone);
-  outline: none;
-  flex: 1;
-  min-height: 0;
 }
 
 /* ── Shared state layout ────────────────────────── */

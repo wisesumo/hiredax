@@ -1,28 +1,26 @@
 "use client";
 
 import "../../styles/dashboard.css";
-import { useState } from "react";
-import { StatusPill } from "@/components/ui";
+import { useEffect, useState } from "react";
 import {
-  MOCK_SESSIONS,
-  MOCK_SESSION_PENDING,
-} from "@/lib/mock-data";
+  collection,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
+import { Spinner, StatusPill } from "@/components/ui";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth-context";
 import type { Session } from "@/lib/types";
-
-// Sort sessions most-recently-updated first
-const SORTED_SESSIONS = [...MOCK_SESSIONS].sort(
-  (a, b) => b.updatedAt.seconds - a.updatedAt.seconds
-);
 
 // ── Pending-approval card (expanded, interactive) ──────────────────────────
 
-function PendingCard({ session }: { session: typeof MOCK_SESSION_PENDING }) {
-  const result = session.analysisResult!;
+function PendingCard({ session }: { session: Session }) {
+  const result = session.analysisResult;
 
-  const interiorSurcharge = result.surcharges.interior ?? 0;
-  const baseEstimate = result.estimatedPrice - interiorSurcharge;
-
-  const [price, setPrice] = useState(result.estimatedPrice.toFixed(2));
+  const [price, setPrice] = useState(
+    (session.suggestedPrice ?? result?.suggestedPrice ?? 0).toFixed(2)
+  );
   const [heavySurcharge, setHeavySurcharge] = useState(false);
   const [released, setReleased] = useState(false);
 
@@ -37,9 +35,9 @@ function PendingCard({ session }: { session: typeof MOCK_SESSION_PENDING }) {
   function handleApprove() {
     if (released) return;
     setReleased(true);
-    setTimeout(() => {
-      setReleased(false);
-    }, 2000);
+    // TODO Task 14: Expert Seal Gate write — update Firestore
+    // { status: 'quote_approved', approvedPrice, updatedAt }
+    setTimeout(() => setReleased(false), 2000);
   }
 
   return (
@@ -60,43 +58,35 @@ function PendingCard({ session }: { session: typeof MOCK_SESSION_PENDING }) {
         <p className="db-tray-heading">Dax identified these items:</p>
 
         <ul className="db-item-list" aria-label="Identified items">
-          {result.items.map((item) => (
-            <li key={item.name} className="db-item-row">
-              <span className="db-item-name">{item.name}</span>
-              <span className="db-item-detail">
-                {item.quantity > 1 ? `×${item.quantity} · ` : ""}
-                {item.volume} yd³
-              </span>
+          {(result?.items ?? []).map((item) => (
+            <li key={item} className="db-item-row">
+              <span className="db-item-name">{item}</span>
             </li>
           ))}
         </ul>
 
-        {/* Placeholder photo thumbnails */}
-        <div className="db-photos" aria-label="Customer photos">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="db-photo-thumb" aria-hidden="true">
-              <svg
-                className="db-photo-thumb-icon"
-                width={24}
-                height={24}
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="M21 15l-5-5L5 21" />
-              </svg>
-            </div>
-          ))}
-        </div>
+        {/* Customer photo thumbnails */}
+        {session.photoUrls.length > 0 && (
+          <div className="db-photos" aria-label="Customer photos">
+            {session.photoUrls.map((url, i) => (
+              <div key={url} className="db-photo-thumb">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="db-photo-thumb-img"
+                  src={url}
+                  alt={`Customer photo ${i + 1}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
-        <p className="db-total-volume">
-          Total volume: {result.totalVolume} cubic yards
-        </p>
+        {result && (
+          <p className="db-total-volume">
+            Total volume: {result.volume_yd3} cubic yards ·{" "}
+            {Math.round(result.confidence * 100)}% confidence
+          </p>
+        )}
       </div>
 
       <div className="db-card-divider" />
@@ -105,15 +95,9 @@ function PendingCard({ session }: { session: typeof MOCK_SESSION_PENDING }) {
       <div className="db-pricing">
         <div className="db-price-breakdown">
           <div className="db-price-line">
-            <span>Base estimate</span>
-            <span>${baseEstimate.toFixed(2)}</span>
+            <span>Dax suggested</span>
+            <span>${(session.suggestedPrice ?? 0).toFixed(2)}</span>
           </div>
-          {interiorSurcharge > 0 && (
-            <div className="db-price-line">
-              <span>Interior surcharge</span>
-              <span>${interiorSurcharge.toFixed(2)}</span>
-            </div>
-          )}
         </div>
 
         {/* Editable price input */}
@@ -157,9 +141,9 @@ function PendingCard({ session }: { session: typeof MOCK_SESSION_PENDING }) {
   );
 }
 
-// ── Collapsed cards ────────────────────────────────────────────────────────
+// ── Collapsed card (all non-pending statuses) ──────────────────────────────
 
-function ApprovedCard({ session }: { session: Session }) {
+function CollapsedCard({ session }: { session: Session }) {
   return (
     <div className="db-card">
       <div className="db-card-header">
@@ -171,27 +155,13 @@ function ApprovedCard({ session }: { session: Session }) {
       </div>
       <div className="db-card-collapsed-body">
         <span className="db-card-meta">
-          Approved: <strong>${session.approvedPrice?.toFixed(2)}</strong>
-        </span>
-        <a href="#" className="db-view-link">View Details</a>
-      </div>
-    </div>
-  );
-}
-
-function BookedCard({ session }: { session: Session }) {
-  return (
-    <div className="db-card">
-      <div className="db-card-header">
-        <div className="db-card-identity">
-          <span className="db-card-name">{session.customerName}</span>
-          <span className="db-card-phone">{session.customerPhone}</span>
-        </div>
-        <StatusPill status={session.status} />
-      </div>
-      <div className="db-card-collapsed-body">
-        <span className="db-card-meta">
-          Slot: <strong>{session.bookingSlot}</strong>
+          {session.status === "booking_confirmed" ? (
+            <>Slot: <strong>2:00 PM – 4:00 PM today</strong></>
+          ) : session.approvedPrice !== null ? (
+            <>Approved: <strong>${session.approvedPrice.toFixed(2)}</strong></>
+          ) : (
+            <>In progress</>
+          )}
         </span>
         <a href="#" className="db-view-link">View Details</a>
       </div>
@@ -202,6 +172,61 @@ function BookedCard({ session }: { session: Session }) {
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function ExpertSealPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [sessions, setSessions] = useState<Session[] | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    const sessionsQuery = query(
+      collection(db, "sessions"),
+      where("operatorId", "==", user.uid)
+    );
+    const unsubscribe = onSnapshot(
+      sessionsQuery,
+      (snapshot) => {
+        const rows = snapshot.docs.map((d) => {
+          // Firestore returns untyped DocumentData; sessions are only ever
+          // written with the Session shape (seed script + agent + portal).
+          const data = d.data() as Omit<Session, "id">;
+          return { ...data, id: d.id };
+        });
+        // Sorted client-side: where + orderBy on different fields would
+        // require a composite Firestore index.
+        rows.sort(
+          (a, b) =>
+            (b.createdAt ? b.createdAt.toMillis() : 0) -
+            (a.createdAt ? a.createdAt.toMillis() : 0)
+        );
+        setSessions(rows);
+        setError("");
+      },
+      () => setError("Could not load work orders. Check your connection and refresh.")
+    );
+    return unsubscribe;
+  }, [user]);
+
+  const loading = authLoading || (user !== null && sessions === null && !error);
+  const rows = sessions ?? [];
+
+  // Live stats
+  const activeJobs = rows.filter(
+    (s) => s.status === "pending_approval" || s.status === "quote_approved"
+  ).length;
+  const revenue = rows.reduce((sum, s) => sum + (s.approvedPrice ?? 0), 0);
+  const conversion =
+    rows.length > 0
+      ? Math.round(
+          (rows.filter((s) => s.status === "booking_confirmed").length /
+            rows.length) *
+            100
+        )
+      : 0;
+  const volume = rows.reduce(
+    (sum, s) => sum + (s.analysisResult?.volume_yd3 ?? 0),
+    0
+  );
+
   return (
     <div className="db-page">
 
@@ -210,19 +235,27 @@ export default function ExpertSealPage() {
         <div className="db-stats-grid">
           <div className="db-stat-card">
             <span className="db-stat-label">Active Jobs</span>
-            <span className="db-stat-value db-stat-value--green">3</span>
+            <span className="db-stat-value db-stat-value--green">
+              {activeJobs}
+            </span>
           </div>
           <div className="db-stat-card">
-            <span className="db-stat-label">Today&apos;s Revenue</span>
-            <span className="db-stat-value db-stat-value--green">$1,312.50</span>
+            <span className="db-stat-label">Revenue</span>
+            <span className="db-stat-value db-stat-value--green">
+              ${revenue.toLocaleString("en-US")}
+            </span>
           </div>
           <div className="db-stat-card">
             <span className="db-stat-label">Conversion Rate</span>
-            <span className="db-stat-value db-stat-value--navy">78%</span>
+            <span className="db-stat-value db-stat-value--navy">
+              {conversion}%
+            </span>
           </div>
           <div className="db-stat-card">
             <span className="db-stat-label">Volume</span>
-            <span className="db-stat-value db-stat-value--stone">12.4 yd³</span>
+            <span className="db-stat-value db-stat-value--stone">
+              {volume.toFixed(1)} yd³
+            </span>
           </div>
         </div>
       </section>
@@ -234,23 +267,31 @@ export default function ExpertSealPage() {
           <StatusPill isLive />
         </div>
 
-        {SORTED_SESSIONS.map((session) => {
-          if (session.status === "pending_approval") {
-            return (
-              <PendingCard
-                key={session.token}
-                session={session as typeof MOCK_SESSION_PENDING}
-              />
-            );
-          }
-          if (session.status === "quote_approved") {
-            return <ApprovedCard key={session.token} session={session} />;
-          }
-          if (session.status === "booking_confirmed") {
-            return <BookedCard key={session.token} session={session} />;
-          }
-          return null;
-        })}
+        {loading && (
+          <div className="db-loading-wrap" role="status" aria-label="Loading work orders">
+            <Spinner size="lg" />
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="db-error-card" role="alert">{error}</div>
+        )}
+
+        {!loading && !error && rows.length === 0 && (
+          <div className="db-empty-card" role="status">
+            No work orders yet. When Dax takes a call, it appears here live.
+          </div>
+        )}
+
+        {!loading &&
+          !error &&
+          rows.map((session) =>
+            session.status === "pending_approval" ? (
+              <PendingCard key={session.id} session={session} />
+            ) : (
+              <CollapsedCard key={session.id} session={session} />
+            )
+          )}
 
         {/* V2 Preview Banner */}
         <div className="db-v2-banner" aria-hidden="true">
