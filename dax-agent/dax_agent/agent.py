@@ -2,26 +2,12 @@
 Dax — HireDax EstimatorAgent (root) — ADK Python 2.0 multi-agent system
 """
 from google.adk.agents import LlmAgent
-# from google.adk.tools import AgentTool  # Day 2: uncomment when GroundingAgent is added
-# from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, SseServerParams  # Day 2: re-add
 
-# from .tools.send_sight_link import send_sight_link   # Day 2: re-add (requires requests env)
-# from .tools.analyze_photos import analyze_photos     # Day 2: re-add (requires vertexai)
-# Day 2: add GroundingAgent here
-# from .agents.grounding_agent import grounding_agent
+from .tools.send_sight_link import send_sight_link
+from .tools.analyze_photos import analyze_photos
 
-# TODO Day 2 Task 16: re-add Firestore MCP connection using
-# the correct google-adk 2.2.0 MCP API (McpToolset signature
-# changed — verify the current import path and params).
-#
-# FIRESTORE_MCP_URL = "https://firestore.googleapis.com/mcp/v1"
-# firestore_mcp = McpToolset(
-#     connection_params=SseServerParams(url=FIRESTORE_MCP_URL),
-#     tool_filter=["firestore_get_document", "firestore_update_document"],
-# )
-
-# Day 2: add GroundingAgent here
-# get_pricing_context = AgentTool(agent=grounding_agent)
+# TODO Task 16 STEP 2: wire McpToolset for Firestore session state.
+# TODO Task 16b STEP 3: wire GroundingAgent via AgentTool.
 
 SYSTEM_PROMPT = """
 You are Dax, a friendly and professional AI assistant for a home service
@@ -70,9 +56,7 @@ root_agent = LlmAgent(
     model="gemini-2.5-flash",          # Vertex AI via ADK
     instruction=SYSTEM_PROMPT,
     tools=[
-        # send_sight_link,              # Day 2: re-add once vertexai/requests confirmed
-        # get_pricing_context,          # Day 2: delegates to GroundingAgent (A2A)
-        # analyze_photos,               # Day 2: re-add once vertexai confirmed
-        # firestore_mcp,                # Day 2: re-add once MCP API verified
+        send_sight_link,                # Custom function tool (Surge SMS)
+        analyze_photos,                 # Custom function tool (Gemini Vision)
     ],
 )

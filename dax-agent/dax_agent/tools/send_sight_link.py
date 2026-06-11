@@ -24,14 +24,20 @@ def send_sight_link(session_token: str, customer_phone: str) -> dict:
         f"Snap 1-3 photos of the items and we'll have a price for you right away."
     )
 
-    response = requests.post(
-        f"https://api.surge.app/accounts/{os.environ['SURGE_ACCOUNT_ID']}/messages",
-        headers={"Authorization": f"Bearer {os.environ['SURGE_API_KEY']}"},
-        json={
-            "conversation": {"contact": {"phone_number": customer_phone}},
-            "body": message_body,
-        },
-        timeout=10,
-    )
-    response.raise_for_status()
+    try:
+        response = requests.post(
+            f"https://api.surge.app/accounts/{os.environ['SURGE_ACCOUNT_ID']}/messages",
+            headers={"Authorization": f"Bearer {os.environ['SURGE_API_KEY']}"},
+            json={
+                "conversation": {"contact": {"phone_number": customer_phone}},
+                "body": message_body,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        # Surge failure must not kill the live call — report it to the model
+        # so Dax can re-confirm the number or offer a callback.
+        return {"success": False, "error": str(exc), "url": sight_link_url}
+
     return {"success": True, "url": sight_link_url, "phone": customer_phone}

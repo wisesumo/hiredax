@@ -3,7 +3,8 @@ name = "dax-agent"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "google-adk[gcp]>=1.0.0",
+    "google-adk[gcp]>=2.2.0",
+    "google-cloud-firestore>=2.19.0",
     "mcp>=1.0.0",
     "requests>=2.32.0",
 ]

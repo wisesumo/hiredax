@@ -1,11 +1,15 @@
 """
 ADK function tool: analyze_photos
-Calls Gemini 2.5 Flash Vision to classify items and generate estimate.
+Pulls the session's uploaded photo URLs from Firestore, calls Gemini 2.5 Flash
+Vision via Vertex AI, and returns a structured AnalysisResult.
 """
 import json
 import os
+
+import requests
 import vertexai
-from vertexai.generative_models import GenerativeModel, Part
+from google.cloud import firestore
+from vertexai.generative_models import GenerationConfig, GenerativeModel, Part
 
 VISION_PROMPT = """
 Analyze these photos of items that need to be removed from a property.
@@ -22,35 +26,90 @@ Then calculate:
     "stairs": $75 if stairs are visible in photos,
     "interior": $50 if items appear to be inside a structure
   }
+- confidence: float 0.0-1.0, how confident you are in the item
+  identification and volume estimates
 
 Return ONLY valid JSON matching this structure:
 {
   "items": [{"name": str, "volume": float, "quantity": int}],
   "totalVolume": float,
   "estimatedPrice": float,
-  "surcharges": {"heavy_items": float, "stairs": float, "interior": float}
+  "surcharges": {"heavy_items": float, "stairs": float, "interior": float},
+  "confidence": float
 }
 """
 
+# Demo-safety net: if Vertex AI or Firestore is unreachable mid-demo, the call
+# still produces a reviewable estimate (clearly flagged as a fallback).
+FALLBACK_RESULT = {
+    "items": [
+        {"name": "couch", "volume": 3.0, "quantity": 1},
+        {"name": "mattress", "volume": 1.5, "quantity": 1},
+    ],
+    "totalVolume": 4.5,
+    "volume_yd3": 4.5,
+    "estimatedPrice": 487.5,
+    "surcharges": {"heavy_items": 0.0, "stairs": 0.0, "interior": 50.0},
+    "confidence": 0.5,
+    "fallback": True,
+}
 
-def analyze_photos(session_token: str, photo_urls: list[str]) -> dict:
+
+def _photo_part(url: str) -> Part:
+    if url.startswith("gs://"):
+        return Part.from_uri(url, mime_type="image/jpeg")
+    # Firebase Storage download URLs are https — Vertex can't fetch those
+    # itself, so pull the bytes and inline them.
+    resp = requests.get(url, timeout=10)
+    resp.raise_for_status()
+    mime = resp.headers.get("Content-Type", "image/jpeg").split(";")[0]
+    if not mime.startswith("image/"):
+        mime = "image/jpeg"
+    return Part.from_data(resp.content, mime_type=mime)
+
+
+def analyze_photos(session_token: str) -> dict:
     """
-    Analyze customer-uploaded photos and return a pricing estimate.
+    Analyze the customer's uploaded photos and return a pricing estimate.
 
     Args:
-        session_token: The session this analysis belongs to.
-        photo_urls: List of Firebase Storage URLs for the uploaded photos.
+        session_token: The session whose uploaded photos should be analyzed.
 
     Returns:
-        AnalysisResult dict matching the TypeScript interface.
+        AnalysisResult dict: items[], totalVolume (cubic yards),
+        estimatedPrice, surcharges, confidence.
     """
-    vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"], location="us-central1")
-    model = GenerativeModel("gemini-2.5-flash")
+    try:
+        db = firestore.Client(project=os.environ["GOOGLE_CLOUD_PROJECT"])
+        snapshot = db.collection("sessions").document(session_token).get()
+        if not snapshot.exists:
+            return {**FALLBACK_RESULT, "session_token": session_token,
+                    "error": f"session {session_token} not found"}
+        photo_urls = snapshot.to_dict().get("photos") or []
+        if not photo_urls:
+            return {**FALLBACK_RESULT, "session_token": session_token,
+                    "error": "no photos uploaded yet"}
 
-    parts = [Part.from_uri(url, mime_type="image/jpeg") for url in photo_urls]
-    parts.append(Part.from_text(VISION_PROMPT))
+        vertexai.init(
+            project=os.environ["GOOGLE_CLOUD_PROJECT"],
+            location=os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1"),
+        )
+        model = GenerativeModel("gemini-2.5-flash")
 
-    response = model.generate_content(parts)
-    result = json.loads(response.text.strip())
-    result["session_token"] = session_token
-    return result
+        parts = [_photo_part(url) for url in photo_urls]
+        parts.append(Part.from_text(VISION_PROMPT))
+
+        response = model.generate_content(
+            parts,
+            generation_config=GenerationConfig(
+                response_mime_type="application/json"
+            ),
+        )
+        result = json.loads(response.text.strip())
+        result["volume_yd3"] = result.get("totalVolume", 0.0)
+        result["session_token"] = session_token
+        result["fallback"] = False
+        return result
+    except Exception as exc:  # demo safety: never crash the live call
+        return {**FALLBACK_RESULT, "session_token": session_token,
+                "error": str(exc)}
