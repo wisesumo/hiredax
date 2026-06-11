@@ -1,17 +1,20 @@
 "use client";
 
 import "../../styles/dashboard.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   collection,
+  doc,
   onSnapshot,
   query,
+  serverTimestamp,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { Spinner, StatusPill } from "@/components/ui";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
-import type { Session } from "@/lib/types";
+import type { Session, SessionStatus } from "@/lib/types";
 
 // ── Pending-approval card (expanded, interactive) ──────────────────────────
 
@@ -22,7 +25,8 @@ function PendingCard({ session }: { session: Session }) {
     (session.suggestedPrice ?? result?.suggestedPrice ?? 0).toFixed(2)
   );
   const [heavySurcharge, setHeavySurcharge] = useState(false);
-  const [released, setReleased] = useState(false);
+  const [releasing, setReleasing] = useState(false);
+  const [approveError, setApproveError] = useState("");
 
   function handleHeavyToggle() {
     const adding = !heavySurcharge;
@@ -32,12 +36,28 @@ function PendingCard({ session }: { session: Session }) {
     );
   }
 
-  function handleApprove() {
-    if (released) return;
-    setReleased(true);
-    // TODO Task 14: Expert Seal Gate write — update Firestore
-    // { status: 'quote_approved', approvedPrice, updatedAt }
-    setTimeout(() => setReleased(false), 2000);
+  // EXPERT SEAL GATE — the one write that releases a price to the customer.
+  // Fires only on an explicit operator tap; never automated.
+  async function handleApprove() {
+    if (releasing) return;
+    const approvedPrice = parseFloat(price);
+    if (!Number.isFinite(approvedPrice) || approvedPrice <= 0) {
+      setApproveError("Enter a valid price before approving.");
+      return;
+    }
+    setReleasing(true);
+    setApproveError("");
+    try {
+      await updateDoc(doc(db, "sessions", session.id), {
+        status: "quote_approved",
+        approvedPrice,
+        updatedAt: serverTimestamp(),
+      });
+      // onSnapshot re-renders this card as approved/collapsed.
+    } catch {
+      setApproveError("Could not release the quote. Try again.");
+      setReleasing(false);
+    }
   }
 
   return (
@@ -128,14 +148,18 @@ function PendingCard({ session }: { session: Session }) {
         </label>
       </div>
 
+      {approveError && (
+        <p className="db-approve-error" role="alert">{approveError}</p>
+      )}
+
       {/* Approve button — rounded only at card bottom corners */}
       <button
-        className={`db-approve-btn${released ? " db-approve-btn--released" : ""}`}
+        className={`db-approve-btn${releasing ? " db-approve-btn--released" : ""}`}
         onClick={handleApprove}
         aria-label="Approve and release quote"
-        disabled={released}
+        disabled={releasing}
       >
-        {released ? "✓ Quote Released!" : "✅ Approve & Release Quote"}
+        {releasing ? "Releasing…" : "✅ Approve & Release Quote"}
       </button>
     </div>
   );
@@ -175,6 +199,9 @@ export default function ExpertSealPage() {
   const { user, loading: authLoading } = useAuth();
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [error, setError] = useState("");
+  // Status of every session as of the previous snapshot — null until the
+  // first snapshot lands so the initial load never chimes.
+  const prevStatusesRef = useRef<Map<string, SessionStatus> | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -191,6 +218,22 @@ export default function ExpertSealPage() {
           const data = d.data() as Omit<Session, "id">;
           return { ...data, id: d.id };
         });
+
+        // Audio chime when a session transitions INTO pending_approval
+        const prevStatuses = prevStatusesRef.current;
+        if (
+          prevStatuses &&
+          rows.some(
+            (s) =>
+              s.status === "pending_approval" &&
+              prevStatuses.get(s.id) !== "pending_approval"
+          )
+        ) {
+          new Audio("/chime.mp3").play().catch(() => {
+            // Autoplay can be blocked before the first user interaction.
+          });
+        }
+        prevStatusesRef.current = new Map(rows.map((s) => [s.id, s.status]));
         // Sorted client-side: where + orderBy on different fields would
         // require a composite Firestore index.
         rows.sort(

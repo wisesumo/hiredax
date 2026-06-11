@@ -2,8 +2,23 @@
 
 import "../../../styles/portal.css";
 import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import {
+  getDownloadURL,
+  ref as storageRef,
+  uploadBytesResumable,
+} from "firebase/storage";
 import { Logo, Spinner, StarRating } from "@/components/ui";
-import { MOCK_SESSION_PENDING } from "@/lib/mock-data";
+import { db, storage } from "@/lib/firebase";
+import type { Session, SessionStatus } from "@/lib/types";
 
 type PortalViewState =
   | "link_sent"
@@ -12,6 +27,29 @@ type PortalViewState =
   | "quote_approved"
   | "booking_confirmed"
   | "job_complete";
+
+function viewForStatus(status: SessionStatus): PortalViewState {
+  switch (status) {
+    case "call_active":
+    case "link_sent":
+      return "link_sent";
+    case "photos_uploading":
+      return "photos_uploading";
+    case "photos_complete":
+    case "analysis_running":
+    case "pending_approval":
+      return "analysis_running";
+    case "quote_approved":
+    case "quote_delivered":
+      return "quote_approved";
+    case "booking_confirmed":
+    case "work_order_signed":
+      return "booking_confirmed";
+    case "job_complete":
+    case "rated":
+      return "job_complete";
+  }
+}
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 
@@ -33,27 +71,67 @@ function fmt(n: number) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PortalPage({ params }: { params: { token: string } }) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in Task 14 (Firestore session fetch)
   const { token } = params;
 
-  // Driven by Firestore session.status in Task 14
-  const [viewState, setViewState] = useState<PortalViewState>("link_sent");
+  // Live session — fetched by portalToken, kept in sync via onSnapshot
+  const [session, setSession] = useState<Session | null>(null);
+  const [fetchState, setFetchState] = useState<
+    "loading" | "ready" | "not_found" | "error"
+  >("loading");
+
+  useEffect(() => {
+    const sessionQuery = query(
+      collection(db, "sessions"),
+      where("portalToken", "==", token)
+    );
+    const unsubscribe = onSnapshot(
+      sessionQuery,
+      (snapshot) => {
+        if (snapshot.empty) {
+          setSession(null);
+          setFetchState("not_found");
+          return;
+        }
+        const d = snapshot.docs[0];
+        // Firestore returns untyped DocumentData; sessions are only ever
+        // written with the Session shape (seed script + agent + dashboard).
+        const data = d.data() as Omit<Session, "id">;
+        setSession({ ...data, id: d.id });
+        setFetchState("ready");
+      },
+      () => setFetchState("error")
+    );
+    return unsubscribe;
+  }, [token]);
 
   // Photo upload (STATE 1 & 2)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photos,    setPhotos]    = useState<File[]>([]);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
 
   // Canvas signature (STATE 5)
   const canvasRef      = useRef<HTMLCanvasElement>(null);
   const isDrawingRef   = useRef(false);
   const lastPointRef   = useRef<{ x: number; y: number } | null>(null);
   const [hasDrawn, setHasDrawn] = useState(false);
+  const [signedLocally, setSignedLocally] = useState(false);
 
   // Feedback (STATE 6)
   const [rating,            setRating]            = useState<number | null>(null);
   const [feedback,          setFeedback]          = useState("");
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
+  // View state — Firestore session.status drives the UI; the local upload
+  // and signature flows overlay it until the next status write lands.
+  const statusView = session ? viewForStatus(session.status) : "link_sent";
+  const viewState: PortalViewState = uploading
+    ? "photos_uploading"
+    : signedLocally && statusView === "booking_confirmed"
+      ? "job_complete"
+      : statusView;
 
   // ── Photo URL lifecycle ──────────────────────────────────────────────────
 
@@ -66,6 +144,45 @@ export default function PortalPage({ params }: { params: { token: string } }) {
   function handleFiles(list: FileList | null) {
     if (!list) return;
     setPhotos((prev) => [...prev, ...Array.from(list)].slice(0, 3));
+  }
+
+  // ── Upload — Storage → photoUrls → status: analysis_running ─────────────
+
+  async function handleUpload() {
+    if (!session || photos.length === 0 || uploading) return;
+    setUploading(true);
+    setUploadError("");
+    setUploadProgress(0);
+    try {
+      const urls: string[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        const file = photos[i];
+        const path = `sessions/${session.id}/photos/${Date.now()}_${file.name}`;
+        const task = uploadBytesResumable(storageRef(storage, path), file);
+        await new Promise<void>((resolve, reject) => {
+          task.on(
+            "state_changed",
+            (snap) => {
+              const fileFraction = snap.bytesTransferred / snap.totalBytes;
+              setUploadProgress(((i + fileFraction) / photos.length) * 100);
+            },
+            reject,
+            resolve
+          );
+        });
+        urls.push(await getDownloadURL(task.snapshot.ref));
+      }
+      await updateDoc(doc(db, "sessions", session.id), {
+        photoUrls: urls,
+        status: "analysis_running",
+        updatedAt: serverTimestamp(),
+      });
+      // The onSnapshot listener transitions the UI to analysis_running.
+    } catch {
+      setUploadError("Upload failed. Please check your connection and try again.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   // ── Canvas setup (runs whenever state switches to booking_confirmed) ──────
@@ -143,12 +260,12 @@ export default function PortalPage({ params }: { params: { token: string } }) {
     setHasDrawn(false);
   }, []);
 
-  // ── Mock data for STATE 4 — replaced by live session data in Task 14 ──────
+  // ── Live estimate data for STATE 4 ───────────────────────────────────────
 
-  const ar     = MOCK_SESSION_PENDING.analysisResult!;
-  const items  = ar.items;
-  const volume = ar.volume_yd3;
-  const total  = ar.suggestedPrice;
+  const items     = session?.analysisResult?.items ?? [];
+  const volume    = session?.analysisResult?.volume_yd3 ?? 0;
+  const total     = session?.approvedPrice ?? session?.suggestedPrice ?? 0;
+  const firstName = session?.customerName.split(" ")[0] ?? "there";
 
   // ── State renderers ──────────────────────────────────────────────────────
 
@@ -170,10 +287,33 @@ export default function PortalPage({ params }: { params: { token: string } }) {
               </p>
             </div>
 
+            {photoUrls.length > 0 && (
+              <div className="portal-thumbs">
+                {photoUrls.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`Photo ${i + 1}`}
+                    className="portal-thumb"
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="portal-btn-stack">
+              {photos.length > 0 && (
+                <button
+                  type="button"
+                  className="portal-btn portal-btn-primary"
+                  onClick={handleUpload}
+                >
+                  ⬆️ Upload {photos.length} Photo{photos.length !== 1 ? "s" : ""}
+                </button>
+              )}
               <button
                 type="button"
-                className="portal-btn portal-btn-primary"
+                className={`portal-btn ${photos.length > 0 ? "portal-btn-outline" : "portal-btn-primary"}`}
                 onClick={() => fileInputRef.current?.click()}
               >
                 📷 Take a Photo
@@ -186,6 +326,10 @@ export default function PortalPage({ params }: { params: { token: string } }) {
                 🖼 Choose from Library
               </button>
             </div>
+
+            {uploadError && (
+              <p className="portal-upload-error" role="alert">{uploadError}</p>
+            )}
 
             {/* Hidden file input — shared by both buttons */}
             <input
@@ -216,24 +360,16 @@ export default function PortalPage({ params }: { params: { token: string } }) {
                 ))}
               </div>
             )}
-            {photoUrls.length === 0 && (
-              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                {[1, 2, 3].map((n) => (
-                  <div key={n} style={{
-                    flex: 1, aspectRatio: "1",
-                    background: "var(--color-bone-deep)",
-                    borderRadius: "var(--radius-md)",
-                  }} />
-                ))}
-              </div>
-            )}
 
             <div className="portal-progress-wrap">
-              <div className="portal-progress-bar" />
+              <div
+                className="portal-progress-bar"
+                style={{ width: `${Math.max(uploadProgress, 4)}%` }}
+              />
             </div>
 
             <p className="portal-subtext" style={{ textAlign: "center", marginTop: 8 }}>
-              Uploading your photos…
+              Uploading your photos… {Math.round(uploadProgress)}%
             </p>
           </>
         );
@@ -280,10 +416,12 @@ export default function PortalPage({ params }: { params: { token: string } }) {
                 </div>
 
                 {/* Volume */}
-                <div className="portal-line-row">
-                  <span>Estimated volume</span>
-                  <span>{volume} cu yd</span>
-                </div>
+                {volume > 0 && (
+                  <div className="portal-line-row">
+                    <span>Estimated volume</span>
+                    <span>{volume} cu yd</span>
+                  </div>
+                )}
 
                 {/* Total */}
                 <div className="portal-total-row">
@@ -352,7 +490,7 @@ export default function PortalPage({ params }: { params: { token: string } }) {
                 type="button"
                 className="portal-btn portal-btn-primary"
                 disabled={!hasDrawn}
-                onClick={() => setViewState("job_complete")}
+                onClick={() => setSignedLocally(true)}
               >
                 Sign &amp; Confirm Work Order
               </button>
@@ -368,7 +506,7 @@ export default function PortalPage({ params }: { params: { token: string } }) {
               <div className="portal-circle-icon">
                 <CheckIcon size={28} />
               </div>
-              <h2 className="portal-heading">You&apos;re all set, Marcus!</h2>
+              <h2 className="portal-heading">You&apos;re all set, {firstName}!</h2>
               <p className="portal-subtext">
                 We&apos;ll see you between 2:00 PM and 4:00 PM.
               </p>
@@ -423,7 +561,33 @@ export default function PortalPage({ params }: { params: { token: string } }) {
           <Logo size="sm" />
         </header>
 
-        {renderState()}
+        {fetchState === "loading" && (
+          <div className="portal-spinner-wrap" role="status" aria-label="Loading">
+            <Spinner size="lg" />
+          </div>
+        )}
+
+        {fetchState === "not_found" && (
+          <div className="portal-spinner-wrap" role="alert">
+            <h2 className="portal-heading">Link not found</h2>
+            <p className="portal-subtext">
+              This photo link is no longer active. Please call us back and
+              we&apos;ll send you a fresh one.
+            </p>
+          </div>
+        )}
+
+        {fetchState === "error" && (
+          <div className="portal-spinner-wrap" role="alert">
+            <h2 className="portal-heading">Something went wrong</h2>
+            <p className="portal-subtext">
+              We couldn&apos;t load your session. Check your connection and
+              refresh the page.
+            </p>
+          </div>
+        )}
+
+        {fetchState === "ready" && renderState()}
       </div>
     </div>
   );

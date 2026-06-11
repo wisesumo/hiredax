@@ -550,6 +550,15 @@
   color: var(--status-error-text);
 }
 
+.db-approve-error {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--status-error-bg);
+  color: var(--status-error-text);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 /* ── Settings page (.db-settings-*) ─────────────── */
 .db-settings-content {
   flex: 1;
