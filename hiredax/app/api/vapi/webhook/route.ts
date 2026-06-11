@@ -7,11 +7,25 @@
  *   - send_sight_link    → create session + SMS the portal link
  *   - check_photos_status → spoken-style progress report
  *   - read_approved_quote → EXPERT SEAL GATE: price only if quote_approved
+ *
+ * Uses the client Firebase SDK (same db instance as the frontend) — the
+ * Admin SDK needs a service-account key, which org policy blocks on Vercel.
+ * Firestore security rules permit these specific reads/writes.
  */
 import { NextResponse } from "next/server";
-import { FieldValue } from "firebase-admin/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { randomUUID } from "crypto";
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { db } from "@/lib/firebase";
 
 interface VapiToolCall {
   id: string;
@@ -59,13 +73,19 @@ function asString(value: unknown): string {
 }
 
 // Webhook-created sessions belong to the demo operator so they appear on the
-// judge-facing dashboard. Cached across invocations.
+// judge-facing dashboard. Looked up via the operators collection (doc id ==
+// auth uid, written by the seed script) and cached across invocations.
 let demoOperatorUid: string | null = null;
 async function getDemoOperatorUid(): Promise<string> {
   if (demoOperatorUid) return demoOperatorUid;
   const email = process.env.DEMO_OPERATOR_EMAIL ?? "demo@hiredax.com";
-  const user = await adminAuth.getUserByEmail(email);
-  demoOperatorUid = user.uid;
+  const snapshot = await getDocs(
+    query(collection(db, "operators"), where("email", "==", email), limit(1))
+  );
+  if (snapshot.empty) {
+    throw new Error(`No operator doc found for ${email}`);
+  }
+  demoOperatorUid = snapshot.docs[0].id;
   return demoOperatorUid;
 }
 
@@ -105,9 +125,9 @@ async function handleSendSightLink(
 
   const operatorId = await getDemoOperatorUid();
   const portalToken = randomUUID();
-  const sessionRef = adminDb.collection("sessions").doc();
+  const sessionRef = doc(collection(db, "sessions"));
 
-  await sessionRef.set({
+  await setDoc(sessionRef, {
     id: sessionRef.id,
     operatorId,
     customerName,
@@ -118,8 +138,8 @@ async function handleSendSightLink(
     analysisResult: null,
     suggestedPrice: null,
     approvedPrice: null,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://hiredax.com";
@@ -155,9 +175,9 @@ async function handleCheckPhotosStatus(
   if (!sessionId) {
     return "I need the session ID to check on the photos.";
   }
-  const snapshot = await adminDb.collection("sessions").doc(sessionId).get();
+  const snapshot = await getDoc(doc(db, "sessions", sessionId));
   console.log(`[vapi-webhook] check_photos_status session=${sessionId}`);
-  if (!snapshot.exists) {
+  if (!snapshot.exists()) {
     return "I couldn't find that session. Double-check the session ID.";
   }
   const status = asString(snapshot.get("status"));
@@ -186,9 +206,9 @@ async function handleReadApprovedQuote(
   if (!sessionId) {
     return "I need the session ID to look up the quote.";
   }
-  const snapshot = await adminDb.collection("sessions").doc(sessionId).get();
+  const snapshot = await getDoc(doc(db, "sessions", sessionId));
   console.log(`[vapi-webhook] read_approved_quote session=${sessionId}`);
-  if (!snapshot.exists) {
+  if (!snapshot.exists()) {
     return "I couldn't find that session, so no quote is available yet.";
   }
 
