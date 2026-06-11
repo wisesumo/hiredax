@@ -16,6 +16,44 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 import type { Session, SessionStatus } from "@/lib/types";
 
+// ── Copy portal link action ────────────────────────────────────────────────
+// Also the judge's no-SMS path into the customer portal: the copied URL is
+// the exact link the customer receives by text.
+
+function CopyPortalLink({ token }: { token: string }) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  async function handleCopy() {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
+    try {
+      await navigator.clipboard.writeText(`${base}/portal/${token}`);
+      setCopied(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API can be unavailable (insecure context, permissions).
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="db-copy-link"
+      onClick={handleCopy}
+      aria-label="Copy portal link"
+    >
+      {copied ? "✓ Copied" : "Copy portal link"}
+    </button>
+  );
+}
+
 // ── Pending-approval card (expanded, interactive) ──────────────────────────
 
 function PendingCard({ session }: { session: Session }) {
@@ -67,6 +105,7 @@ function PendingCard({ session }: { session: Session }) {
         <div className="db-card-identity">
           <span className="db-card-name">{session.customerName}</span>
           <span className="db-card-phone">{session.customerPhone}</span>
+          <CopyPortalLink token={session.portalToken} />
         </div>
         <StatusPill status="pending_approval" />
       </div>
@@ -187,7 +226,10 @@ function CollapsedCard({ session }: { session: Session }) {
             <>In progress</>
           )}
         </span>
-        <a href="#" className="db-view-link">View Details</a>
+        <span className="db-card-actions">
+          <CopyPortalLink token={session.portalToken} />
+          <a href="#" className="db-view-link">View Details</a>
+        </span>
       </div>
     </div>
   );

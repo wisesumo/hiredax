@@ -357,6 +357,32 @@
   text-decoration: underline;
 }
 
+.db-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.db-copy-link {
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  display: flex;
+  align-items: center;
+}
+
+.db-copy-link:hover {
+  text-decoration: underline;
+}
+
 /* ── V2 preview banner ───────────────────────────── */
 .db-v2-banner {
   text-align: center;
