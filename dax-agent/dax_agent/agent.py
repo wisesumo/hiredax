@@ -6,9 +6,11 @@ from datetime import datetime, timezone
 
 import google.auth
 import google.auth.transport.requests
+import httpx
 from google.adk.agents import LlmAgent
 from google.adk.tools import AgentTool
 from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
+from mcp.shared._httpx_utils import create_mcp_http_client
 
 from . import mcp_compat
 from .tools.send_sight_link import send_sight_link
@@ -22,20 +24,37 @@ mcp_compat.apply()
 FIRESTORE_MCP_URL = "https://firestore.googleapis.com/mcp"
 
 
-def _adc_bearer_token() -> str:
-    creds, _ = google.auth.default(
-        scopes=["https://www.googleapis.com/auth/datastore"]
+class _AdcAuth(httpx.Auth):
+    """Attaches a fresh ADC bearer token to every MCP request.
+
+    ADC tokens expire after ~1h; a static Authorization header silently
+    drops the MCP tools from any adk web process older than that. The
+    refresh is a blocking call on the event loop, but it only fires when
+    the cached token has expired.
+    """
+
+    def __init__(self) -> None:
+        self._creds, _ = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/datastore"]
+        )
+
+    def auth_flow(self, request):
+        if not self._creds.valid:
+            self._creds.refresh(google.auth.transport.requests.Request())
+        request.headers["Authorization"] = f"Bearer {self._creds.token}"
+        yield request
+
+
+def _firestore_http_client(headers=None, timeout=None, auth=None):
+    return create_mcp_http_client(
+        headers=headers, timeout=timeout, auth=_AdcAuth()
     )
-    creds.refresh(google.auth.transport.requests.Request())
-    return creds.token
 
 
-# Token is fetched at process start; ADC tokens last ~1h, which covers a demo
-# run. Long-lived deployments should swap in a refreshing httpx auth hook.
 firestore_mcp = McpToolset(
     connection_params=StreamableHTTPConnectionParams(
         url=FIRESTORE_MCP_URL,
-        headers={"Authorization": f"Bearer {_adc_bearer_token()}"},
+        httpx_client_factory=_firestore_http_client,
     ),
     # Scope to only the tools Dax needs
     tool_filter=["get_document", "update_document"],
