@@ -4,32 +4,33 @@ import "../../styles/auth.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { Logo, Spinner } from "@/components/ui";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth-context";
 
-function friendlyAuthError(err: unknown): string {
+function friendlySignupError(err: unknown): string {
   if (err instanceof FirebaseError) {
     switch (err.code) {
-      case "auth/invalid-credential":
-      case "auth/user-not-found":
-      case "auth/wrong-password":
+      case "auth/email-already-in-use":
+        return "An account with this email already exists. Try signing in instead.";
       case "auth/invalid-email":
-        return "Email or password is incorrect.";
-      case "auth/too-many-requests":
-        return "Too many attempts. Please wait a few minutes and try again.";
+        return "Please enter a valid email address.";
+      case "auth/weak-password":
+        return "Password should be at least 6 characters.";
       case "auth/network-request-failed":
         return "Connection problem. Check your network and try again.";
     }
   }
-  return "Could not sign in. Please try again.";
+  return "Could not create your account. Please try again.";
 }
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -42,15 +43,36 @@ export default function LoginPage() {
     }
   }, [loading, user, router]);
 
-  async function handleSignIn(e: React.FormEvent) {
+  async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const { uid } = credential.user;
+
+      // Store the full name on the auth profile for display elsewhere.
+      if (fullName.trim()) {
+        await updateProfile(credential.user, { displayName: fullName.trim() });
+      }
+
+      // Create the operator doc — uid is the doc id so dashboard queries match.
+      await setDoc(doc(db, "operators", uid), {
+        uid,
+        email,
+        businessName: "",
+        phone: "",
+        plan: "starter",
+        createdAt: serverTimestamp(),
+      });
+
+      router.push("/onboarding");
     } catch (err) {
-      setError(friendlyAuthError(err));
+      setError(friendlySignupError(err));
       setIsLoading(false);
     }
   }
@@ -68,13 +90,30 @@ export default function LoginPage() {
         <div className="auth-spacer" />
 
         {/* Form */}
-        <form className="auth-form" onSubmit={handleSignIn} noValidate>
+        <form className="auth-form" onSubmit={handleSignUp} noValidate>
           <div className="auth-field">
-            <label className="auth-label" htmlFor="auth-email">
+            <label className="auth-label" htmlFor="signup-name">
+              Full Name
+            </label>
+            <input
+              id="signup-name"
+              className="auth-input"
+              type="text"
+              placeholder="Jordan Rivera"
+              autoComplete="name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              disabled={isLoading}
+              required
+            />
+          </div>
+
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="signup-email">
               Email
             </label>
             <input
-              id="auth-email"
+              id="signup-email"
               className="auth-input"
               type="email"
               placeholder="you@yourbusiness.com"
@@ -87,15 +126,15 @@ export default function LoginPage() {
           </div>
 
           <div className="auth-field">
-            <label className="auth-label" htmlFor="auth-password">
+            <label className="auth-label" htmlFor="signup-password">
               Password
             </label>
             <input
-              id="auth-password"
+              id="signup-password"
               className="auth-input"
               type="password"
-              placeholder="••••••••"
-              autoComplete="current-password"
+              placeholder="At least 6 characters"
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
@@ -109,12 +148,12 @@ export default function LoginPage() {
             disabled={isLoading}
             aria-busy={isLoading}
           >
-            {isLoading ? <Spinner size="sm" /> : "Sign In"}
+            {isLoading ? <Spinner size="sm" /> : "Create Account"}
           </button>
 
           {/* Inline error — always rendered, hidden when empty */}
           <p
-            id="auth-error"
+            id="signup-error"
             className="auth-error"
             role="alert"
             aria-live="polite"
@@ -126,9 +165,9 @@ export default function LoginPage() {
         <div className="auth-divider" role="separator" />
 
         <p className="auth-register">
-          New to HireDax?{" "}
-          <Link href="/signup" className="auth-register-link">
-            Set up your account →
+          Already have an account?{" "}
+          <Link href="/login" className="auth-register-link">
+            Sign in →
           </Link>
         </p>
 
