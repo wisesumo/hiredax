@@ -2,6 +2,7 @@
 Dax — HireDax EstimatorAgent (root) — ADK Python 2.0 multi-agent system
 """
 import os
+from datetime import datetime, timezone
 
 import google.auth
 import google.auth.transport.requests
@@ -9,9 +10,12 @@ from google.adk.agents import LlmAgent
 from google.adk.tools import AgentTool
 from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
 
+from . import mcp_compat
 from .tools.send_sight_link import send_sight_link
 from .tools.analyze_photos import analyze_photos
 from .agents.grounding_agent import grounding_agent
+
+mcp_compat.apply()
 
 # Google's managed Firestore MCP server (remote, streamable HTTP).
 # Session state reads/writes go through these MCP tools.
@@ -116,10 +120,16 @@ CALL FLOW:
 10. If they accept, call update_document to set status booking_confirmed.
 """
 
+def _instruction(_ctx) -> str:
+    # The model has no clock; give it real time so updatedAt writes are sane.
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return f"{SYSTEM_PROMPT}\nCurrent UTC time: {now}\n"
+
+
 root_agent = LlmAgent(
     name="dax",
     model="gemini-2.5-flash",          # Vertex AI via ADK
-    instruction=SYSTEM_PROMPT,
+    instruction=_instruction,
     tools=[
         send_sight_link,                # Custom function tool (Surge SMS)
         get_pricing_context,            # ← delegates to GroundingAgent (A2A)

@@ -59,8 +59,11 @@ def _photo_part(url: str) -> Part:
     if url.startswith("gs://"):
         return Part.from_uri(url, mime_type="image/jpeg")
     # Firebase Storage download URLs are https — Vertex can't fetch those
-    # itself, so pull the bytes and inline them.
-    resp = requests.get(url, timeout=10)
+    # itself, so pull the bytes and inline them. Some hosts (e.g. Wikimedia)
+    # reject the default python-requests User-Agent.
+    resp = requests.get(
+        url, timeout=10, headers={"User-Agent": "HireDax-Dax-Agent/0.1"}
+    )
     resp.raise_for_status()
     mime = resp.headers.get("Content-Type", "image/jpeg").split(";")[0]
     if not mime.startswith("image/"):
@@ -85,7 +88,9 @@ def analyze_photos(session_token: str) -> dict:
         if not snapshot.exists:
             return {**FALLBACK_RESULT, "session_token": session_token,
                     "error": f"session {session_token} not found"}
-        photo_urls = snapshot.to_dict().get("photos") or []
+        doc = snapshot.to_dict()
+        # Seed script and portal write "photoUrls"; SSD interface says "photos"
+        photo_urls = doc.get("photoUrls") or doc.get("photos") or []
         if not photo_urls:
             return {**FALLBACK_RESULT, "session_token": session_token,
                     "error": "no photos uploaded yet"}

@@ -51,5 +51,6 @@ reliable, hallucination-resistant result than a single static-prompt agent.
 
 ## Build Status
 - [x] Day 1 (Task 15): EstimatorAgent scaffold — send_sight_link, analyze_photos, Firestore MCP
-- [ ] Day 2 (Task 16b): GroundingAgent sub-agent + A2A wiring via AgentTool
+- [x] Day 2 (Task 16): Real tools + TIER 1 Google Managed Firestore MCP (McpToolset, streamable HTTP)
+- [x] Day 2 (Task 16b): GroundingAgent sub-agent + A2A wiring via AgentTool — verified locally (eval/local_verify.py)
 - [ ] Day 2 (Task 17): Deploy to Cloud Run via agents-cli
